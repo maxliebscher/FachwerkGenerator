@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Max Liebschers' FassadenSchmied: Fachwerk-Generator v0.2.2.3</title>
+        <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+        .chart-container { position: relative; width: 100%; max-width: 100%; height: 250px; }
+        @media (min-width: 768px) { .chart-container { height: 280px; } }
+        #canvas-wrapper {
+            position: relative; width: 100%; height: 85vh; min-height: 700px;
+            background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden;
+            background-image: 
+                linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+                linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: center bottom;
+        }
+        input[type=range] { accent-color: #334155; height: 4px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #334155; cursor: pointer; }
+        .control-label { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .control-value { font-family: monospace; color: #94a3b8; }
+        .floor-config { border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; background: #ffffff; margin-bottom: 0.75rem; border-left: 4px solid #cbd5e1; transition: border-color 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .floor-config:hover { border-left-color: #475569; }
+        .floor-header { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #334155; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.25rem;}
+        .floor-select, .toolbar-select { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.25rem; padding: 0.25rem 0.5rem; font-size: 0.8rem; color: #334155;}
+        .toolbar-select { background: #1e293b; color: #f1f5f9; border-color: #475569; padding: 0.25rem 0.75rem; cursor: pointer; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<div class="min-h-screen flex flex-col">
+    <header class="bg-slate-900 text-slate-100 shadow py-3 px-6 flex justify-between items-center border-b-[3px] border-amber-500 relative z-20">
+        <div class="flex items-center gap-3">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">Max Liebschers' FassadenSchmied: Fachwerk-Generator. V0.2.2.3</h1>
+                <p class="text-xs text-slate-400">Erweiterte Demo zum Verständnis der Funktionsweise.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700">
+                <select id="colorPreset" class="toolbar-select border-none bg-transparent">
+                    <option value="default">🎨 Holz: Braun</option>
+                    <option value="green">🎨 Holz: Grün</option>
+                    <option value="red" selected>🎨 Holz: Rot</option>
+                </select>
+                <div class="w-px h-5 bg-slate-600"></div>
+                <label class="text-xs text-slate-300 ml-1">Putz:</label>
+                <input type="color" id="customPlaster" value="#b3c5c6" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </div>
+            <div class="flex gap-2">
+                <button id="btnExport" class="bg-emerald-600 hover:bg-emerald-500 text-sm rounded px-3 py-1 font-bold text-white transition-colors">↓ Export .json</button>
+                <label class="bg-amber-600 hover:bg-amber-500 text-sm rounded px-3 py-1 font-bold text-white cursor-pointer transition-colors">
+                    ↑ Import .json
+                    <input type="file" id="btnImport" accept=".json" class="hidden">
+                </label>
+            </div>
+        </div>
+    </header>
+    <main class="flex-grow p-4 md:p-6 flex flex-col gap-6 max-w-[1900px] mx-auto w-full relative z-10">
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <div class="xl:col-span-1 flex flex-col gap-4 overflow-y-auto pr-2" style="max-height: 88vh;">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-slate-100">
+                        <div>
+                            <label class="control-label"><span>Geschosse</span><span id="rowsVal" class="control-value">5</span></label>
+                            <input type="range" id="paramRows" min="1" max="10" value="5" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label"><span>Gefache</span><span id="colsVal" class="control-value">6</span></label>
+                            <input type="range" id="paramCols" min="2" max="16" step="1" value="6" class="w-full">
+                        </div>
+                    </div>
+                    <div class="mb-4 pb-4 border-b border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs font-bold uppercase text-slate-600 cursor-pointer" for="paramGable">Giebel generieren</label>
+                            <input type="checkbox" id="paramGable" checked class="w-4 h-4 text-slate-800 rounded focus:ring-slate-800 cursor-pointer">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="control-label">Dach-Neigung</label>
+                                <input type="range" id="paramPitch" min="0.5" max="2.5" step="0.1" value="1.5" class="w-full mt-1">
+                            </div>
+                            <div>
+                                <label class="control-label">Giebel-Stil</label>
+                                <select id="paramGableStyle" class="floor-select mt-1">
+                                    <option value="fachwerk" selected>Verstrebt</option>
+                                    <option value="vertikal">Nur Vertikal</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs font-bold uppercase text-slate-600 cursor-pointer" for="toggleDormer">Zwerchhaus (Dormer)</label>
+                            <input type="checkbox" id="toggleDormer" checked class="w-4 h-4 text-slate-600 rounded focus:ring-slate-500 cursor-pointer">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <label class="control-label"><span>Breite</span><span id="dormerWVal" class="control-value">2</span></label>
+                                <input type="range" id="paramDormerW" min="1" max="7" step="1" value="2" class="w-full">
+                            </div>
+                            <div>
+                                <label class="control-label"><span>Höhe</span><span id="dormerHVal" class="control-value">0.5x</span></label>
+                                <input type="range" id="paramDormerH" min="0.5" max="2.0" step="0.1" value="0.5" class="w-full">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="paramDormerStyle" class="floor-select w-full m-0"></select>
+                            <select id="paramDormerGable" class="floor-select w-full m-0">
+                                <option value="fachwerk">Giebel: Fachwerk</option>
+                                <option value="vertikal" selected>Giebel: Vertikal</option>
+                                <option value="leer">Giebel: Leer</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-700 mb-3 ml-1 flex justify-between items-center">Baukasten-Details ⚒️</h3>
+                    <div class="control-group">
+                        <label class="control-label"><span>Balkenstärke (px)</span><span id="thickVal" class="control-value">5</span></label>
+                        <input type="range" id="paramThick" min="3" max="24" value="5" class="w-full">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label"><span>Fensterdichte (%)</span><span id="windowDVal" class="control-value">55%</span></label>
+                        <input type="range" id="paramWindowD" min="0" max="100" step="5" value="55" class="w-full mt-1">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label"><span>Alterung (Warp)</span><span id="warpVal" class="control-value">0</span></label>
+                        <input type="range" id="paramWarp" min="0" max="50" step="1" value="0" class="w-full mt-1">
+                    </div>
+                </div>
+                <div class="bg-slate-100 p-3 rounded-xl border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 ml-1 flex justify-between items-center">Fassaden-Ebenen 📜</h3>
+                    <div id="floorControlsContainer" class="flex flex-col-reverse">
+                        </div>
+                </div>
+                
+            </div>
+            <div class="xl:col-span-3 flex flex-col gap-6">
+                <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-300 relative">
+                    <div id="canvas-wrapper">
+                        <canvas id="fachwerkCanvas" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    const canvas = document.getElementById('fachwerkCanvas');
+    const ctx = canvas.getContext('2d');
+    const uiRows = document.getElementById('paramRows');
+    const uiCols = document.getElementById('paramCols');
+    const uiThick = document.getElementById('paramThick');
+    const uiPitch = document.getElementById('paramPitch');
+    const uiGable = document.getElementById('paramGable');
+    const uiGableStyle = document.getElementById('paramGableStyle');
+    const toggleDormer = document.getElementById('toggleDormer');
+    const uiDormerStyle = document.getElementById('paramDormerStyle');
+    const uiDormerGable = document.getElementById('paramDormerGable');
+    const uiDormerW = document.getElementById('paramDormerW');
+    const uiDormerH = document.getElementById('paramDormerH');
+    const uiColorPreset = document.getElementById('colorPreset');
+    const uiCustomPlaster = document.getElementById('customPlaster');
+    const uiWindowD = document.getElementById('paramWindowD');
+    const uiWarp = document.getElementById('paramWarp');
+    const floorControlsContainer = document.getElementById('floorControlsContainer');
+    const btnExport = document.getElementById('btnExport');
+    const btnImport = document.getElementById('btnImport');
+    const updateVal = (id, val, suffix='') => { document.getElementById(id).innerText = val + suffix; };
+    let stats = { vCount: 0, hCount: 0, dCount: 0, curveCount: 0, windowCount:0 };
+    let scene = {
+        walls:  { bg: [], timbers: { h: [], d: [], v: [] }, windows: [], arches: [] },
+        gable:  { bg: [], timbers: { h: [], d: [], v: [] } },
+        dormer: { bg: [], timbers: { h: [], d: [], v: [] } },
+        turrets:{ bg: [], timbers: { h: [], d: [], v: [] } }
+    };
+    let virtualBounds = { w: 0, h: 0 };
+    let floorData = []; 
+    let COLOR_TIMBER = '#2d1b15';
+    let COLOR_PLASTER = '#b3c5c6';
+    let COLOR_STONE = '#94a3b8'; 
+    let COLOR_BRICK = '#c87d6b';
+    let COLOR_ARCH = '#334155';
+    let COLOR_WINDOW = '#ffffff';
+    const FLOOR_STYLE_OPTIONS = [
+        { value: 'stein_bogen', label: 'Tor-Bögen' },
+        { value: 'skelett', label: 'Skelett/Raster' },
+        { value: 'wilder_mann', label: 'Wilder Mann' },
+        { value: 'hessenmann', label: 'Hessenmann (2-Feld)' },
+        { value: 'manbrust', label: 'Mann + Brüstung' },
+        { value: 'schwaeb_mann', label: 'Schwäbischer Mann' },
+        { value: 'rhein_bund', label: 'Rheinischer Bund' },
+        { value: 'k_streben', label: 'Doppel-K Streben' }
+    ];
+    let savedFloorStates = [];
+    function populateDormerStyles() {
+        uiDormerStyle.innerHTML = '';
+        FLOOR_STYLE_OPTIONS.forEach(opt => {
+            if(opt.value !== 'stein_bogen') {
+                const option = document.createElement('option');
+                option.value = opt.value; option.innerText = opt.label;
+                if(opt.value === 'rhein_bund') option.selected = true;
+                uiDormerStyle.appendChild(option);
+            }
+        });
+        const fg = document.createElement('option'); fg.value = 'fischgraet'; fg.innerText = 'Fischgrät'; uiDormerStyle.appendChild(fg);
+    }
+    function applyColors() {
+        const preset = uiColorPreset.value;
+        if(preset === 'green') COLOR_TIMBER = '#1c4a2d';
+        else if (preset === 'red') COLOR_TIMBER = '#8b3030';
+        else COLOR_TIMBER = '#2d1b15'; 
+        COLOR_PLASTER = uiCustomPlaster.value;
+        generate();
+    }
+    uiColorPreset.addEventListener('change', applyColors);
+    uiCustomPlaster.addEventListener('input', applyColors);
+    function getCurrentStateJSON() {
+        savedFloorStates = [];
+        document.querySelectorAll('.floor-config').forEach(card => {
+            const idx = card.getAttribute('data-index');
+            savedFloorStates[idx] = {
+                style: document.getElementById(`floorStyle-${idx}`).value,
+                material: document.getElementById(`floorMaterial-${idx}`).value,
+                height: document.getElementById(`floorHeight-${idx}`).value,
+                overhang: document.getElementById(`overHang-${idx}`) ? document.getElementById(`overHang-${idx}`).value : 0,
+                arches: document.getElementById(`archCount-${idx}`) ? document.getElementById(`archCount-${idx}`).value : 4,
+                turret: document.getElementById(`turret-${idx}`).value
+            };
+        });
+        const config = {
+            version: "11.0",
+            rows: uiRows.value, cols: uiCols.value, thick: uiThick.value, pitch: uiPitch.value,
+            hasGable: uiGable.checked, gableStyle: uiGableStyle.value,
+            hasDormer: toggleDormer.checked, dormStyle: uiDormerStyle.value, dormGable: uiDormerGable.value,
+            dormerW: uiDormerW.value, dormerH: uiDormerH.value,
+            winDens: uiWindowD.value, warp: uiWarp.value,
+            timberPreset: uiColorPreset.value, plasterColor: uiCustomPlaster.value,
+            floors: savedFloorStates
+        };
+        return JSON.stringify(config, null, 2);
+    }
+    btnExport.addEventListener('click', () => {
+        const jsonStr = getCurrentStateJSON();
+        const blob = new Blob([jsonStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        const ts = new Date().toISOString().slice(0,10).replace(/-/g,"");
+        a.download = `fachwerk_config_${ts}.json`; a.click();
+        URL.revokeObjectURL(url);
+    });
+    btnImport.addEventListener('change', (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const config = JSON.parse(e.target.result);
+                uiRows.value = config.rows; updateVal('rowsVal', config.rows);
+                uiCols.value = config.cols; updateVal('colsVal', config.cols);
+                uiThick.value = config.thick; updateVal('thickVal', config.thick);
+                uiPitch.value = config.pitch; 
+                uiGable.checked = config.hasGable; uiGableStyle.value = config.gableStyle || 'fachwerk';
+                toggleDormer.checked = config.hasDormer; uiDormerStyle.value = config.dormStyle || 'wilder_mann';
+                if(config.dormGable) uiDormerGable.value = config.dormGable;
+                if(config.dormerW) { uiDormerW.value = config.dormerW; updateVal('dormerWVal', config.dormerW); }
+                if(config.dormerH) { uiDormerH.value = config.dormerH; updateVal('dormerHVal', parseFloat(config.dormerH).toFixed(1), 'x'); }
+                uiWindowD.value = config.winDens; updateVal('windowDVal', config.winDens, '%');
+                uiWarp.value = config.warp; updateVal('warpVal', config.warp);
+                uiColorPreset.value = config.timberPreset || 'default'; uiCustomPlaster.value = config.plasterColor || '#fdfbf7';
+                savedFloorStates = config.floors || [];
+                initFloorControls(false); applyColors();
+            } catch(err) { alert("Fehler beim Laden der JSON Datei!"); console.error(err); }
+        };
+        reader.readAsText(file); e.target.value = '';
+    });
+    function initFloorControls(preserveState = false) {
+        if (preserveState) {
+            savedFloorStates = [];
+            document.querySelectorAll('.floor-config').forEach(card => {
+                const idx = card.getAttribute('data-index');
+                savedFloorStates[idx] = {
+                    style: document.getElementById(`floorStyle-${idx}`).value,
+                    material: document.getElementById(`floorMaterial-${idx}`).value,
+                    height: document.getElementById(`floorHeight-${idx}`).value,
+                    overhang: document.getElementById(`overHang-${idx}`) ? document.getElementById(`overHang-${idx}`).value : 0,
+                    arches: document.getElementById(`archCount-${idx}`) ? document.getElementById(`archCount-${idx}`).value : 4,
+                    turret: document.getElementById(`turret-${idx}`).value
+                };
+            });
+        }
+        const rows = parseInt(uiRows.value);
+        floorControlsContainer.innerHTML = '';
+        for (let i = 0; i < rows; i++) {
+            let st = 'skelett', mat = 'plaster', h = '1.3', oh = '20', arc = '4', tur = 'none';
+            if (savedFloorStates[i]) {
+                st = savedFloorStates[i].style; mat = savedFloorStates[i].material; h = savedFloorStates[i].height; 
+                oh = savedFloorStates[i].overhang; arc = savedFloorStates[i].arches; tur = savedFloorStates[i].turret || 'none';
+            } else {
+                if (i === 0) { st = 'stein_bogen'; mat = 'stone'; h = '1.8'; oh = '0'; arc = '4'; tur = 'none'; }
+                else if (i === 1) { st = 'hessenmann'; mat = 'brick'; h = '1.9'; oh = '0'; arc = '4'; tur = 'none'; }
+                else if (i === 2) { st = 'k_streben'; mat = 'plaster'; h = '1.8'; oh = '4'; arc = '4'; tur = 'left'; }
+                else if (i === 3) { st = 'skelett'; mat = 'plaster'; h = '1.9'; oh = '20'; arc = '4'; tur = 'right'; }
+                else if (i === 4) { st = 'rhein_bund'; mat = 'plaster'; h = '1.2'; oh = '50'; arc = '4'; tur = 'none'; }
+            }
+            const floorTitle = i === 0 ? 'Erdgeschoss' : `${i}. Obergeschoss`;
+            const floorCard = document.createElement('div');
+            floorCard.className = 'floor-config'; floorCard.setAttribute('data-index', i);
+            floorCard.innerHTML = `
+                <div class="floor-header"><span>${floorTitle}</span>
+                    <div class="flex gap-2 items-center">
+                        <select id="turret-${i}" class="floor-select m-0 text-[10px] py-0.5 w-auto">
+                            <option value="none" ${tur==='none'?'selected':''}>Kein Turm</option>
+                            <option value="left" ${tur==='left'?'selected':''}>Turm Links</option>
+                            <option value="right" ${tur==='right'?'selected':''}>Turm Rechts</option>
+                            <option value="both" ${tur==='both'?'selected':''}>Türme Beide</option>
+                        </select>
+                        <span class="bg-slate-100 text-slate-400 px-1 rounded text-[10px]">FL ${i+1}</span>
+                    </div>
+                </div>
+            `;
+            const gridSelects = document.createElement('div'); gridSelects.className = 'grid grid-cols-2 gap-2 mb-2';
+            const selectStyle = document.createElement('select'); selectStyle.className = 'floor-select'; selectStyle.id = `floorStyle-${i}`;
+            FLOOR_STYLE_OPTIONS.forEach(opt => {
+                const option = document.createElement('option'); option.value = opt.value; option.innerText = opt.label;
+                if (opt.value === st) option.selected = true; selectStyle.appendChild(option);
+            });
+            gridSelects.appendChild(selectStyle);
+            const selectMaterial = document.createElement('select'); selectMaterial.className = 'floor-select'; selectMaterial.id = `floorMaterial-${i}`;
+            ['Putz', 'Backstein', 'Stein'].forEach((mName, idx) => {
+                const optionMat = document.createElement('option'); optionMat.value = idx === 0 ? 'plaster' : idx === 1 ? 'brick' : 'stone';
+                optionMat.innerText = mName; if(optionMat.value === mat) optionMat.selected = true; selectMaterial.appendChild(optionMat);
+            });
+            gridSelects.appendChild(selectMaterial);
+            floorCard.appendChild(gridSelects);
+            const gridSliders = document.createElement('div'); gridSliders.className = 'grid grid-cols-2 gap-4';
+            gridSliders.innerHTML += `<div><label class="control-label"><span>Höhe</span><span id="hVal-${i}" class="control-value">${parseFloat(h).toFixed(1)}x</span></label><input type="range" id="floorHeight-${i}" min="0.5" max="2.5" step="0.1" value="${h}" class="w-full"></div>`;
+            if (i > 0) { gridSliders.innerHTML += `<div><label class="control-label"><span>Vorkragung</span><span id="oVal-${i}" class="control-value">${oh}</span></label><input type="range" id="overHang-${i}" min="0" max="50" value="${oh}" class="w-full"></div>`; } 
+            else { gridSliders.innerHTML += `<div></div>`; }
+            floorCard.appendChild(gridSliders);
+            const archCont = document.createElement('div');
+            archCont.className = `mt-3 pt-2 border-t border-slate-100 ${st !== 'stein_bogen' ? 'hidden' : ''}`; archCont.id = `archContainer-${i}`;
+            archCont.innerHTML = `<label class="control-label text-amber-600"><span>Anzahl Tor-Bögen</span><span id="arcVal-${i}" class="control-value">${arc}</span></label><input type="range" id="archCount-${i}" min="1" max="12" value="${arc}" class="w-full">`;
+            floorCard.appendChild(archCont);
+            floorControlsContainer.prepend(floorCard);
+        }
+        for (let i = 0; i < rows; i++) {
+            document.getElementById(`floorStyle-${i}`).addEventListener('change', (e) => { 
+                const archC = document.getElementById(`archContainer-${i}`);
+                if(archC) { if(e.target.value === 'stein_bogen') archC.classList.remove('hidden'); else archC.classList.add('hidden'); }
+                generate(); 
+            });
+            document.getElementById(`floorMaterial-${i}`).addEventListener('change', generate);
+            document.getElementById(`turret-${i}`).addEventListener('change', generate);
+            document.getElementById(`floorHeight-${i}`).addEventListener('input', (e) => { updateVal(`hVal-${i}`, parseFloat(e.target.value).toFixed(1), 'x'); generate(); });
+            if(i > 0) { document.getElementById(`overHang-${i}`).addEventListener('input', (e) => { updateVal(`oVal-${i}`, e.target.value); generate(); }); }
+            document.getElementById(`archCount-${i}`)?.addEventListener('input', (e) => { updateVal(`arcVal-${i}`, e.target.value); generate(); });
+        }
+    }
+    function getWarpPoint(x, y) {
+        const warp = parseInt(uiWarp.value); if (warp === 0) return {x, y};
+        const bend = Math.sin(y * 0.05) * (warp * 0.2); 
+        return {x: x + bend, y: y};
+    }
+    function pushTimber(targetLayer, type, x1, y1, x2, y2, multiplier = 1, isCurve = false, cx1, cy1, cx2, cy2) {
+        if(isCurve) {
+            targetLayer[type].push({curve: true, x1, y1, cx1, cy1, cx2, cy2, x2, y2, multi: multiplier});
+            stats.curveCount++;
+        } else {
+            const p1 = getWarpPoint(x1, y1); const p2 = getWarpPoint(x2, y2);
+            if (parseInt(uiWarp.value) > 0 && type !== 'h') {
+                const midX = (p1.x + p2.x)/2; const midY = (p1.y + p2.y)/2;
+                const deflect = parseInt(uiWarp.value) * 0.08;
+                targetLayer[type].push({curve: true, x1:p1.x, y1:p1.y, cx1:midX+deflect, cy1:midY, cx2:midX+deflect, cy2:midY, x2:p2.x, y2:p2.y, multi: multiplier});
+                stats.curveCount++;
+            } else {
+                targetLayer[type].push({x1:p1.x, y1:p1.y, x2:p2.x, y2:p2.y, multi: multiplier});
+                if(type==='v') stats.vCount++; else if(type==='h') stats.hCount++; else stats.dCount++;
+            }
+        }
+    }
+    function drawMannFigure(style, targetLayer, cellX, yBottom, cellW, storyH) {
+        let midY = yBottom + storyH * 0.5; let cellMidX = cellX + cellW / 2; let legDist = cellW * 0.4; let armDist = cellW * 0.4;
+        if (style === 'wilder_mann') {
+            pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX - legDist, yBottom, 1.0); pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX + legDist, yBottom, 1.0);
+            pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX - armDist, yBottom + storyH, 1.0); pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX + armDist, yBottom + storyH, 1.0);
+        } else if (style === 'manbrust') {
+            let brustH = yBottom + storyH * 0.4; pushTimber(targetLayer, 'h', cellX, brustH, cellX + cellW, brustH, 0.8);
+            pushTimber(targetLayer, 'd', cellX, yBottom, cellX + cellW, brustH, 0.8); pushTimber(targetLayer, 'd', cellX + cellW, yBottom, cellX, brustH, 0.8);
+            pushTimber(targetLayer, 'd', cellX + cellW/2, yBottom + storyH, cellX, midY + 10, 0.8); pushTimber(targetLayer, 'd', cellX + cellW/2, yBottom + storyH, cellX + cellW, midY + 10, 0.8);
+        } else if (style === 'schwaeb_mann') {
+            pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX - legDist, yBottom, 1.0, true, cellMidX - legDist/2, yBottom + 10, cellMidX - legDist/2, yBottom + 10);
+            pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX + legDist, yBottom, 1.0, true, cellMidX + legDist/2, yBottom + 10, cellMidX + legDist/2, yBottom + 10);
+            pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX - armDist, yBottom + storyH, 1.0, true, cellMidX - armDist/2, yBottom + storyH - 10, cellMidX - armDist/2, yBottom + storyH - 10);
+            pushTimber(targetLayer, 'd', cellMidX, midY, cellMidX + armDist, yBottom + storyH, 1.0, true, cellMidX + armDist/2, yBottom + storyH - 10, cellMidX + armDist/2, yBottom + storyH - 10);
+        }
+    }
+    function drawHessenmann(targetLayer, cellX, yBottom, cellW, storyH) {
+        let cellW_total = cellW * 2; let cellMidX = cellX + cellW_total / 2; let startX = cellX;
+        let brustH = yBottom + storyH * 0.4; let midY = yBottom + storyH * 0.5; let shoulderY = yBottom + storyH * 0.8;
+        pushTimber(targetLayer, 'd', startX, yBottom, startX + cellW_total, brustH, 0.9); pushTimber(targetLayer, 'd', startX + cellW_total, yBottom, startX, brustH, 0.9);
+        pushTimber(targetLayer, 'h', startX, brustH, startX + cellW_total, brustH, 0.9); pushTimber(targetLayer, 'v', cellMidX, brustH, cellMidX, yBottom + storyH, 0.8);
+        pushTimber(targetLayer, 'd', cellMidX, midY, startX, shoulderY, 1.0); pushTimber(targetLayer, 'd', cellMidX, midY, startX + cellW_total, shoulderY, 1.0);
+        pushTimber(targetLayer, 'd', cellMidX, yBottom + storyH, startX, midY + 10, 0.9); pushTimber(targetLayer, 'd', cellMidX, yBottom + storyH, startX + cellW_total, midY + 10, 0.9);
+    }
+    function drawRheinBund(targetLayer, cellX, yBottom, cellW, storyH) {
+        let brustH = yBottom + storyH * 0.4; let faceH = yBottom + storyH * 0.8;
+        pushTimber(targetLayer, 'h', cellX, brustH, cellX + cellW, brustH, 0.9);
+        pushTimber(targetLayer, 'd', cellX, yBottom, cellX + cellW, brustH, 0.8, true, cellX + 15, brustH - 5, cellX + 15, brustH - 5);
+        pushTimber(targetLayer, 'd', cellX + cellW, yBottom, cellX, brustH, 0.8, true, cellX + cellW - 15, brustH - 5, cellX + cellW - 15, brustH - 5);
+        pushTimber(targetLayer, 'd', cellX, faceH, cellX + cellW/2, yBottom + storyH, 0.7, true, cellX + cellW*0.3, faceH + 10, cellX + cellW*0.3, faceH + 10);
+        pushTimber(targetLayer, 'd', cellX + cellW, faceH, cellX + cellW/2, yBottom + storyH, 0.7, true, cellX + cellW*0.7, faceH + 10, cellX + cellW*0.7, faceH + 10);
+    }
+    function buildLayers() {
+        scene = { walls: { bg: [], timbers: { h: [], d: [], v: [] }, windows: [], arches: [] }, gable: { bg: [], timbers: { h: [], d: [], v: [] } }, dormer: { bg: [], timbers: { h: [], d: [], v: [] } }, turrets: { bg: [], timbers: { h: [], d: [], v: [] } } };
+        stats = { vCount: 0, hCount: 0, dCount: 0, curveCount: 0, windowCount:0 };
+        floorData = [];
+        const baseCellW = 100;
+        const rows = parseInt(uiRows.value); const cols = parseInt(uiCols.value); const roofPitch = parseFloat(uiPitch.value); const windowDensity = parseInt(uiWindowD.value) / 100;
+        let buildingVirtualW = (cols * baseCellW); let maxW = buildingVirtualW; let currentY = 0; 
+        let topFloorW = 0; let topFloorStartX = 0; let topFloorMaterial = 'plaster';
+        for (let j = 0; j < rows; j++) {
+            const style = document.getElementById(`floorStyle-${j}`)?.value || 'skelett';
+            const material = document.getElementById(`floorMaterial-${j}`)?.value || 'plaster';
+            const matColor = material === 'stone' ? COLOR_STONE : material === 'brick' ? COLOR_BRICK : COLOR_PLASTER;
+            const heightMult = parseFloat(document.getElementById(`floorHeight-${j}`)?.value || 1.3);
+            const overhang = j === 0 ? 0 : parseInt(document.getElementById(`overHang-${j}`)?.value || 0);
+            const turretState = document.getElementById(`turret-${j}`)?.value || 'none';
+            const storyH = baseCellW * heightMult; 
+            let storyVirtualW = buildingVirtualW + (overhang * 2);
+            if(storyVirtualW > maxW) maxW = storyVirtualW;
+            let startX = -storyVirtualW / 2; let yBottom = currentY; let yTop = currentY + storyH;
+            if (j === rows - 1) { topFloorW = storyVirtualW; topFloorStartX = startX; topFloorMaterial = material; }
+            floorData.push({ yBot: yBottom, yTop: yTop, startX: startX, width: storyVirtualW, turret: turretState, mat: material, matColor: matColor });
+            scene.walls.bg.push({ color: matColor, poly: [{x: startX, y: yBottom}, {x: -startX, y: yBottom}, {x: -startX, y: yTop}, {x: startX, y: yTop}] });
+            pushTimber(scene.walls.timbers, 'h', startX, yBottom, -startX, yBottom, 1.4);
+            pushTimber(scene.walls.timbers, 'h', startX, yTop, -startX, yTop, 1.2);
+            let actualCellW = storyVirtualW / cols;
+            if (style === 'stein_bogen') {
+                const arches = parseInt(document.getElementById(`archCount-${j}`)?.value || 4);
+                const archW = storyVirtualW / arches; const archH = storyH * 0.75; 
+                for(let i=0; i<arches; i++) { scene.walls.arches.push({cx: startX + (i + 0.5) * archW, y: yBottom, w: archW * 0.8, h: archH}); }
+            }
+            if (j > 0 && overhang > 0) {
+                 for(let i=0; i<=cols; i++) { 
+                     let bx = -storyVirtualW/2 + (i * actualCellW);
+                     pushTimber(scene.walls.timbers, 'v', bx, yBottom, bx, yBottom - 20, 1.6); 
+                     if(style !== 'stein_bogen') {
+                        let innerBx = floorData[j-1].startX + (i * (floorData[j-1].width/cols));
+                        if(Math.abs(bx - innerBx) > 5) {
+                            pushTimber(scene.walls.timbers, 'd', innerBx, yBottom - 30, bx, yBottom, 1.0, true, innerBx, yBottom-10, bx, yBottom-10);
+                        }
+                     }
+                 }
+            }
+            let midY = yBottom + storyH * 0.5;
+            for (let i = 0; i < cols; i++) {
+                let cl = startX + (i * actualCellW); let cr = cl + actualCellW; let cm = cl + actualCellW / 2; let cw = cr - cl;
+                let cellStatus = 'empty';
+                if (style !== 'stein_bogen') { 
+                     if (!(style === 'hessenmann' && i % 2 === 1 && i < cols - 1)) {
+                        pushTimber(scene.walls.timbers, 'v', cl, yBottom, cl, yTop, 1.2);
+                        if (i === cols - 1) pushTimber(scene.walls.timbers, 'v', cr, yBottom, cr, yTop, 1.2);
+                     }
+                }
+                if (style === 'hessenmann' && i < cols - 1 && i % 2 === 0) { drawHessenmann(scene.walls.timbers, cl, yBottom, cw, storyH); cellStatus='figure'; }
+                else if (style === 'wilder_mann' || style === 'manbrust' || style === 'schwaeb_mann') { drawMannFigure(style, scene.walls.timbers, cl, yBottom, cw, storyH); cellStatus='figure'; }
+                else if (style === 'rhein_bund') { drawRheinBund(scene.walls.timbers, cl, yBottom, cw, storyH); cellStatus='figure'; }
+                else if (style === 'k_streben') {
+                    cellStatus='figure'; pushTimber(scene.walls.timbers, 'h', cl, midY, cr, midY, 0.9);
+                    pushTimber(scene.walls.timbers, 'd', cm, midY, cl, yBottom, 1.0); pushTimber(scene.walls.timbers, 'd', cm, midY, cl, yTop, 1.0);
+                    pushTimber(scene.walls.timbers, 'd', cm, midY, cr, yBottom, 1.0); pushTimber(scene.walls.timbers, 'd', cm, midY, cr, yTop, 1.0);
+                }
+                if (cellStatus === 'empty' && material === 'plaster' && style !== 'stein_bogen') {
+                    if (Math.random() < windowDensity) {
+                        let wPad = cw * 0.15; let wW = cw - wPad*2; let wH = storyH * 0.65; scene.walls.windows.push({x: cl + wPad, y: yBottom + storyH * 0.35, w: wW, h: wH}); stats.windowCount++;
+                    }
+                }
+            }
+            currentY = yTop;
+        }
+        let totalPeakY = currentY;
+        const eW = baseCellW * 0.9;
+        ['left', 'right'].forEach(side => {
+            let sequenceActive = false;
+            let seqStartIdx = -1;
+            for(let j=0; j<=rows; j++) {
+                let hasTurret = j < rows && (floorData[j].turret === side || floorData[j].turret === 'both');
+                if (hasTurret && !sequenceActive) {
+                    sequenceActive = true; seqStartIdx = j;
+                } else if (!hasTurret && sequenceActive) {
+                    let endIdx = j - 1;
+                    let fStart = floorData[seqStartIdx]; let fEnd = floorData[endIdx];
+                    let xCenter = side === 'left' ? fEnd.startX - eW/2 + 10 : (fEnd.startX + fEnd.width) + eW/2 - 10;
+                    let yBot = fStart.yBot; let yTop = fEnd.yTop;
+                    let corbelY = yBot - baseCellW * 0.5; let roofY = yTop + eW * 1.5;
+                    let left = xCenter - eW/2; let right = xCenter + eW/2;
+                    let matColor = fEnd.matColor;
+                    scene.turrets.bg.push({ color: darkenColor(matColor, 10), poly: [{x: xCenter, y: corbelY}, {x: right, y: yBot}, {x: right, y: yTop}, {x: xCenter, y: roofY}, {x: left, y: yTop}, {x: left, y: yBot}] });
+                    pushTimber(scene.turrets.timbers, 'd', xCenter, corbelY, left, yBot, 1.2, true, left, corbelY, left, corbelY); 
+                    pushTimber(scene.turrets.timbers, 'd', xCenter, corbelY, right, yBot, 1.2, true, right, corbelY, right, corbelY); 
+                    pushTimber(scene.turrets.timbers, 'v', xCenter, corbelY, xCenter, yBot, 1.0);
+                    for(let k=seqStartIdx; k<=endIdx; k++) {
+                        let kyB = floorData[k].yBot; let kyT = floorData[k].yTop;
+                        pushTimber(scene.turrets.timbers, 'h', left, kyB, right, kyB, 1.3); pushTimber(scene.turrets.timbers, 'h', left, kyT, right, kyT, 1.3);
+                        pushTimber(scene.turrets.timbers, 'd', left, kyB, xCenter, kyT, 0.8); pushTimber(scene.turrets.timbers, 'd', xCenter, kyB, left, kyT, 0.8);
+                        pushTimber(scene.turrets.timbers, 'd', xCenter, kyB, right, kyT, 0.8); pushTimber(scene.turrets.timbers, 'd', right, kyB, xCenter, kyT, 0.8);
+                        if (k === endIdx) { pushTimber(scene.turrets.timbers, 'v', left, kyB, left, kyT, 1.2); pushTimber(scene.turrets.timbers, 'v', right, kyB, right, kyT, 1.2); pushTimber(scene.turrets.timbers, 'v', xCenter, kyB, xCenter, kyT, 1.0); }
+                    }
+                    pushTimber(scene.turrets.timbers, 'd', left, yTop, xCenter, roofY, 1.2); pushTimber(scene.turrets.timbers, 'd', right, yTop, xCenter, roofY, 1.2); pushTimber(scene.turrets.timbers, 'v', xCenter, yTop, xCenter, roofY, 1.0);
+                    if(roofY > totalPeakY) totalPeakY = roofY;
+                    if(Math.abs(xCenter - eW) * 2 > maxW) maxW = Math.abs(xCenter - eW) * 2;
+                    sequenceActive = false;
+                }
+            }
+        });
+        if (uiGable.checked) {
+            let gableH = (topFloorW / 2) * roofPitch; let gablePeakY = currentY + gableH;
+            if(gablePeakY > totalPeakY) totalPeakY = gablePeakY;
+            let matColor = topFloorMaterial === 'stone' ? COLOR_STONE : topFloorMaterial === 'brick' ? COLOR_BRICK : COLOR_PLASTER;
+            scene.gable.bg.push({ color: matColor, poly: [{x: topFloorStartX, y: currentY}, {x: -topFloorStartX, y: currentY}, {x: 0, y: gablePeakY}] });
+            pushTimber(scene.gable.timbers, 'd', topFloorStartX, currentY, 0, gablePeakY, 1.6); pushTimber(scene.gable.timbers, 'd', -topFloorStartX, currentY, 0, gablePeakY, 1.6);
+            let gStyle = uiGableStyle.value; let gableW = topFloorW;
+            if(gStyle === 'fachwerk') {
+                let midY1 = currentY + gableH * 0.35; let wAtMid1 = gableW * (1 - 0.35); 
+                pushTimber(scene.gable.timbers, 'h', -wAtMid1/2, midY1, wAtMid1/2, midY1, 1.0); 
+                if(gableH > baseCellW * 2) { let midY2 = currentY + gableH * 0.7; let wAtMid2 = gableW * (1 - 0.7); pushTimber(scene.gable.timbers, 'h', -wAtMid2/2, midY2, wAtMid2/2, midY2, 0.9); }
+                pushTimber(scene.gable.timbers, 'd', 0, currentY, -wAtMid1/2, midY1, 0.9); pushTimber(scene.gable.timbers, 'd', 0, currentY, wAtMid1/2, midY1, 0.9);
+                pushTimber(scene.gable.timbers, 'v', -wAtMid1/4, currentY, -wAtMid1/4, midY1, 0.9); pushTimber(scene.gable.timbers, 'v', wAtMid1/4, currentY, wAtMid1/4, midY1, 0.9);
+                pushTimber(scene.gable.timbers, 'v', 0, currentY, 0, midY1, 1.2); 
+            } else {
+                pushTimber(scene.gable.timbers, 'v', 0, currentY, 0, gablePeakY, 1.2);
+                let gCellW = gableW / cols;
+                for(let i=1; i<cols; i++) {
+                    if(i !== Math.ceil(cols/2)) {
+                        let px = topFloorStartX + i * gCellW; let distEdge = i <= cols/2 ? (i*gCellW) : gableW - (i*gCellW);
+                        pushTimber(scene.gable.timbers, 'v', px, currentY, px, currentY + (distEdge * roofPitch), 0.9);
+                    }
+                }
+            }
+        }
+        if (uiGable.checked && toggleDormer.checked) {
+            let reqBays = parseInt(uiDormerW.value); let dormerBays = Math.min(cols, reqBays);
+            let dCellW = topFloorW / cols; let dWidth = dormerBays * dCellW; let dStartX = -(dWidth / 2);
+            let mainGableH = (topFloorW / 2) * roofPitch;
+            let dHeight = mainGableH * 0.65 * parseFloat(uiDormerH.value); 
+            let dPeakY = currentY + dHeight + (dWidth / 2) * roofPitch;
+            let matColor = topFloorMaterial === 'brick' ? COLOR_BRICK : topFloorMaterial === 'stone' ? COLOR_STONE : COLOR_PLASTER;
+            scene.dormer.bg.push({ color: matColor, poly: [{x: dStartX, y: currentY}, {x: dStartX + dWidth, y: currentY}, {x: dStartX + dWidth, y: currentY + dHeight}, {x: dStartX, y: currentY + dHeight}] });
+            scene.dormer.bg.push({ color: matColor, poly: [{x: dStartX, y: currentY + dHeight}, {x: dStartX + dWidth, y: currentY + dHeight}, {x: 0, y: dPeakY}] });
+            pushTimber(scene.dormer.timbers, 'h', dStartX, currentY, dStartX + dWidth, currentY, 1.3); pushTimber(scene.dormer.timbers, 'h', dStartX, currentY + dHeight, dStartX + dWidth, currentY + dHeight, 1.2);
+            pushTimber(scene.dormer.timbers, 'v', dStartX, currentY, dStartX, currentY + dHeight, 1.1); pushTimber(scene.dormer.timbers, 'v', dStartX + dWidth, currentY, dStartX + dWidth, currentY + dHeight, 1.1);
+            pushTimber(scene.dormer.timbers, 'd', dStartX, currentY + dHeight, 0, dPeakY, 1.3); pushTimber(scene.dormer.timbers, 'd', dStartX + dWidth, currentY + dHeight, 0, dPeakY, 1.3);
+            let dStyle = uiDormerStyle.value;
+            for(let i=0; i<dormerBays; i++) {
+                let cl = dStartX + i * dCellW; let cr = cl + dCellW; let cm = cl + dCellW/2;
+                if(i > 0) pushTimber(scene.dormer.timbers, 'v', cl, currentY, cl, currentY + dHeight, 1.1);
+                let cellStatus = 'empty';
+                if (dStyle === 'hessenmann' && i < dormerBays - 1 && i % 2 === 0) { drawHessenmann(scene.dormer.timbers, cl, currentY, dCellW, dHeight); cellStatus='fig'; }
+                else if (dStyle === 'wilder_mann' || dStyle === 'manbrust' || dStyle === 'schwaeb_mann') { drawMannFigure(dStyle, scene.dormer.timbers, cl, currentY, dCellW, dHeight); cellStatus='fig';}
+                else if (dStyle === 'rhein_bund') { drawRheinBund(scene.dormer.timbers, cl, currentY, dCellW, dHeight); cellStatus='fig';}
+                else if (dStyle === 'fischgraet') { pushTimber(scene.dormer.timbers, 'd', cl, currentY, cr, currentY + dHeight, 0.7); pushTimber(scene.dormer.timbers, 'd', cr, currentY, cl, currentY + dHeight, 0.7); cellStatus='fig';}
+                if (cellStatus === 'empty' && Math.random() < windowDensity) {
+                    let wPad = dCellW * 0.15; scene.walls.windows.push({x: cl + wPad, y: currentY + dHeight * 0.35, w: dCellW - wPad*2, h: dHeight * 0.65}); stats.windowCount++;
+                }
+            }
+            let dGable = uiDormerGable.value;
+            if(dGable === 'vertikal') { pushTimber(scene.dormer.timbers, 'v', 0, currentY+dHeight, 0, dPeakY, 1.1); }
+            else if (dGable === 'fachwerk') {
+                let midY = currentY + dHeight + (dPeakY - (currentY + dHeight))*0.4; let wAtMid = dWidth * 0.6;
+                pushTimber(scene.dormer.timbers, 'h', -wAtMid/2, midY, wAtMid/2, midY, 1.0);
+                pushTimber(scene.dormer.timbers, 'v', 0, currentY+dHeight, 0, midY, 1.1);
+                pushTimber(scene.dormer.timbers, 'd', 0, currentY+dHeight, -wAtMid/2, midY, 0.8); pushTimber(scene.dormer.timbers, 'd', 0, currentY+dHeight, wAtMid/2, midY, 0.8);
+            }
+            if(dPeakY > totalPeakY) totalPeakY = dPeakY;
+        }
+        virtualBounds = { w: maxW, h: totalPeakY };
+    }
+    function darkenColor(hex, amount=40) {
+        let usePound = false; if (hex[0] == "#") { hex = hex.slice(1); usePound = true; }
+        let num = parseInt(hex,16); let r = (num >> 16) - amount; if (r > 255) r = 255; else if  (r < 0) r = 0;
+        let b = ((num >> 8) & 0x00FF) - amount; if (b > 255) b = 255; else if  (b < 0) b = 0;
+        let g = (num & 0x0000FF) - amount; if (g > 255) g = 255; else if (g < 0) g = 0;
+        return (usePound?"#":"") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
+    }
+    function renderModel() {
+        const dpr = window.devicePixelRatio || 1; const sW = canvas.width / dpr; const sH = canvas.height / dpr; const padding = 60;
+        ctx.save(); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, sW, sH);
+        let scale = Math.min((sW - padding * 2) / virtualBounds.w, (sH - padding * 2) / virtualBounds.h);
+        ctx.translate(sW / 2, padding + virtualBounds.h * scale); ctx.scale(scale, -scale); 
+        const vThickBase = parseInt(uiThick.value) / scale; 
+        const drawPoly = (polyArray) => { polyArray.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.moveTo(p.poly[0].x, p.poly[0].y); for(let i=1; i<p.poly.length; i++) ctx.lineTo(p.poly[i].x, p.poly[i].y); ctx.closePath(); ctx.fill(); }); };
+        const drawTimbers = (timberGroup) => {
+            ctx.strokeStyle = COLOR_TIMBER; ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
+            ['h', 'd', 'v'].forEach(type => {
+                timberGroup[type].forEach(line => {
+                    ctx.lineWidth = vThickBase * line.multi; ctx.beginPath();
+                    if(line.curve) { ctx.moveTo(line.x1, line.y1); ctx.bezierCurveTo(line.cx1, line.cy1, line.cx2, line.cy2, line.x2, line.y2); } 
+                    else { ctx.moveTo(line.x1, line.y1); ctx.lineTo(line.x2, line.y2); }
+                    ctx.stroke();
+                });
+            });
+        };
+        drawPoly(scene.walls.bg);
+        ctx.fillStyle = COLOR_ARCH;
+        scene.walls.arches.forEach(arch => { ctx.beginPath(); let r = arch.w / 2; let sH = arch.h - r; ctx.moveTo(arch.cx + r, arch.y); ctx.lineTo(arch.cx + r, arch.y + sH); ctx.arc(arch.cx, arch.y + sH, r, 0, Math.PI, false); ctx.lineTo(arch.cx - r, arch.y); ctx.closePath(); ctx.fill(); });
+        ctx.fillStyle = COLOR_WINDOW; ctx.strokeStyle = COLOR_TIMBER; ctx.lineWidth = (vThickBase * 0.4);
+        scene.walls.windows.forEach(win => { ctx.fillRect(win.x, win.y, win.w, win.h); ctx.strokeRect(win.x, win.y, win.w, win.h); ctx.beginPath(); ctx.moveTo(win.x, win.y + win.h * 0.5); ctx.lineTo(win.x + win.w, win.y + win.h * 0.5); ctx.moveTo(win.x + win.w * 0.5, win.y); ctx.lineTo(win.x + win.w * 0.5, win.y + win.h); ctx.stroke(); });
+        drawTimbers(scene.walls.timbers);
+        drawPoly(scene.gable.bg); drawTimbers(scene.gable.timbers);
+        drawPoly(scene.turrets.bg); drawTimbers(scene.turrets.timbers);
+        drawPoly(scene.dormer.bg); drawTimbers(scene.dormer.timbers);
+        
+        ctx.restore();
+    }
+    function generate() {
+        buildLayers(); renderModel();
+        
+    }
+    function resizeCanvas() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        let cw = wrapper.clientWidth; let ch = wrapper.clientHeight;
+        if(cw === 0) { cw = 800; ch = 600; }
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = cw * dpr; canvas.height = ch * dpr; canvas.style.width = `${cw}px`; canvas.style.height = `${ch}px`;
+        generate();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    [uiRows, uiCols, uiThick, uiPitch, uiGable, uiGableStyle, toggleDormer, uiDormerStyle, uiDormerGable, uiDormerW, uiDormerH, uiWindowD, uiWarp].forEach(input => {
+        input.addEventListener('input', () => {
+            if(input.id === 'paramRows') updateVal('rowsVal', input.value);
+            if(input.id === 'paramCols') updateVal('colsVal', input.value);
+            if(input.id === 'paramThick') updateVal('thickVal', input.value);
+            if(input.id === 'paramDormerW') updateVal('dormerWVal', input.value);
+            if(input.id === 'paramDormerH') updateVal('dormerHVal', parseFloat(input.value).toFixed(1), 'x');
+            if(input.id === 'paramWindowD') updateVal('windowDVal', input.value, '%');
+            if(input.id === 'paramWarp') updateVal('warpVal', input.value);
+            if (input.id === 'paramRows') initFloorControls(true);
+            generate();
+        });
+    });
+    window.onload = () => { populateDormerStyles(); setTimeout(() => { initFloorControls(false); applyColors(); resizeCanvas(); }, 50); };
+</script>
+</body>
+</html>

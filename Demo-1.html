@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fachwerk-Generator V0.1.3.2</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 280px; }
+        }
+        #canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 75vh; 
+            min-height: 600px;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+                linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center bottom;
+        }
+        input[type=range] { accent-color: #334155; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+<div class="min-h-screen flex flex-col">
+    <header class="bg-slate-900 text-slate-100 shadow-md py-4 px-6 flex justify-between items-center border-b-4 border-amber-800">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight">Max Liebschers' FassadenSchmied: Fachwerk-Generator. V0.1.3.2</h1>
+            <p class="text-sm text-slate-400">Frühe Mini-Demo zum Verständnis der Funktionsweise.</p>
+        </div>
+        <div class="text-xs font-mono px-3 py-1 bg-slate-800 rounded border border-slate-700">
+            Build v0.1.3
+        </div>
+    </header>
+    <main class="flex-grow p-4 md:p-6 flex flex-col gap-6 max-w-[1800px] mx-auto w-full">
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <div class="xl:col-span-1 flex flex-col gap-5 overflow-y-auto pr-2" style="max-height: 85vh;">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 border-b pb-2">Gebäude-Volumen</h3>
+                    <div class="mb-4">
+                        <label class="flex justify-between text-sm font-medium mb-1">
+                            <span>Vollgeschosse</span>
+                            <span id="rowsVal" class="text-slate-500 font-mono">2</span>
+                        </label>
+                        <input type="range" id="paramRows" min="1" max="5" value="2" class="w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="flex justify-between text-sm font-medium mb-1">
+                            <span>Gefache (Breite)</span>
+                            <span id="colsVal" class="text-slate-500 font-mono">5</span>
+                        </label>
+                        <input type="range" id="paramCols" min="3" max="13" step="2" value="5" class="w-full">
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-indigo-500">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-4 border-b pb-2">Proportionen (Neu)</h3>
+                    <div class="mb-4">
+                        <label class="flex justify-between text-sm font-medium mb-1">
+                            <span>Geschosshöhe</span>
+                            <span id="propVal" class="text-slate-500 font-mono">1.2x</span>
+                        </label>
+                        <input type="range" id="paramProp" min="0.8" max="2.2" step="0.1" value="1.2" class="w-full">
+                        <p class="text-[10px] text-slate-400 mt-1">Höhe eines Gefachs relativ zu seiner Breite.</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="flex justify-between text-sm font-medium mb-1">
+                            <span>Dachneigung</span>
+                            <span id="pitchVal" class="text-slate-500 font-mono">1.0</span>
+                        </label>
+                        <input type="range" id="paramPitch" min="0.5" max="2.5" step="0.1" value="1.0" class="w-full">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-medium cursor-pointer" for="paramGable">Dachgeschoss generieren</label>
+                        <input type="checkbox" id="paramGable" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 border-b pb-2">Konstruktion & Stil</h3>
+                    <div class="mb-4">
+                        <label class="flex justify-between text-sm font-medium mb-1">
+                            <span>Balkenstärke</span>
+                            <span id="thickVal" class="text-slate-500 font-mono">14 px</span>
+                        </label>
+                        <input type="range" id="paramThick" min="4" max="24" value="14" class="w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1">Historisches Muster</label>
+                        <select id="paramStyle" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded focus:ring-slate-500 focus:border-slate-500 block p-2">
+                            <option value="brust_kreuz">Brüstungsriegel mit Andreaskreuz</option>
+                            <option value="wilder_mann">Wilder Mann (Eckständer)</option>
+                            <option value="k_streben">K-Streben (Halber Mann)</option>
+                            <option value="kopfbänder">Einfache Kopf- & Fußbänder</option>
+                            <option value="skelett">Nur Raster (Skelett)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-sm font-medium mb-1">Vorkragung (Overhang)</label>
+                        <select id="paramOverhang" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded focus:ring-slate-500 focus:border-slate-500 block p-2">
+                            <option value="0">Keine (Bündig)</option>
+                            <option value="15">Leicht (15 virtual px)</option>
+                            <option value="35">Stark (35 virtual px)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="xl:col-span-3 flex flex-col gap-6">
+            
+                    <div id="canvas-wrapper">
+                        <canvas id="fachwerkCanvas" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    const canvas = document.getElementById('fachwerkCanvas');
+    const ctx = canvas.getContext('2d');
+    const uiRows = document.getElementById('paramRows');
+    const uiCols = document.getElementById('paramCols');
+    const uiProp = document.getElementById('paramProp');
+    const uiPitch = document.getElementById('paramPitch');
+    const uiThick = document.getElementById('paramThick');
+    const uiStyle = document.getElementById('paramStyle');
+    const uiOverhang = document.getElementById('paramOverhang');
+    const uiGable = document.getElementById('paramGable');
+    const valRows = document.getElementById('rowsVal');
+    const valCols = document.getElementById('colsVal');
+    const valProp = document.getElementById('propVal');
+    const valPitch = document.getElementById('pitchVal');
+    const valThick = document.getElementById('thickVal');
+    let ratioChartInst = null;
+    let elementChartInst = null;
+    let stats = { timberArea: 0, infillArea: 0, vCount: 0, hCount: 0, dCount: 0 };
+    let bgPlaster = [];
+    let layerDiagonals = [];
+    let layerHorizontals = [];
+    let layerVerticals = [];
+    let virtualBounds = { w: 0, h: 0 };
+    function initCharts() {
+        const ctxRatio = document.getElementById('ratioChart').getContext('2d');
+        ratioChartInst = new Chart(ctxRatio, {
+            type: 'doughnut',
+            data: { labels: ['Holzwerk', 'Putz/Gefach'], datasets: [{ data: [1, 1], backgroundColor: ['#2d1b15', '#fdfbf7'], borderWidth: 1 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+        const ctxElem = document.getElementById('elementChart').getContext('2d');
+        elementChartInst = new Chart(ctxElem, {
+            type: 'bar',
+            data: { labels: ['Ständer', 'Riegel', 'Streben'], datasets: [{ label: 'Stückzahl', data: [0, 0, 0], backgroundColor: ['#475569', '#64748b', '#94a3b8'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+    function resizeCanvas() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = wrapper.clientWidth * dpr;
+        canvas.height = wrapper.clientHeight * dpr;
+        canvas.style.width = `${wrapper.clientWidth}px`;
+        canvas.style.height = `${wrapper.clientHeight}px`;
+        generate();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    const inputs = [uiRows, uiCols, uiProp, uiPitch, uiThick, uiStyle, uiOverhang, uiGable];
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            valRows.innerText = uiRows.value;
+            valCols.innerText = uiCols.value;
+            valProp.innerText = parseFloat(uiProp.value).toFixed(1) + 'x';
+            valPitch.innerText = parseFloat(uiPitch.value).toFixed(1);
+            valThick.innerText = uiThick.value + ' px';
+            generate();
+        });
+    });
+    function addTimber(layer, x1, y1, x2, y2, multiplier = 1) {
+        layer.push({x1, y1, x2, y2, multi: multiplier});
+        let length = Math.hypot(x2-x1, y2-y1);
+        stats.timberArea += length * (parseInt(uiThick.value) * multiplier);
+        if (layer === layerVerticals) stats.vCount++;
+        else if (layer === layerHorizontals) stats.hCount++;
+        else stats.dCount++;
+    }
+    function buildVirtualModel() {
+        bgPlaster = []; layerDiagonals = []; layerHorizontals = []; layerVerticals = [];
+        stats = { timberArea: 0, infillArea: 0, vCount: 0, hCount: 0, dCount: 0 };
+        const cellW = 100; 
+        const rows = parseInt(uiRows.value);
+        const cols = parseInt(uiCols.value);
+        const storyH = cellW * parseFloat(uiProp.value);
+        const overhang = parseInt(uiOverhang.value);
+        const style = uiStyle.value;
+        const hasGable = uiGable.checked;
+        const roofPitch = parseFloat(uiPitch.value);
+        let maxW = 0;
+        let maxY = 0;
+        for (let j = 0; j < rows; j++) {
+            let storyOverhang = j * overhang;
+            let currentW = (cols * cellW) + (storyOverhang * 2);
+            if (currentW > maxW) maxW = currentW;
+            let startX = -currentW / 2;
+            let yBottom = j * storyH;
+            let yTop = (j + 1) * storyH;
+            maxY = yTop;
+            bgPlaster.push([{x: startX, y: yBottom}, {x: -startX, y: yBottom}, {x: -startX, y: yTop}, {x: startX, y: yTop}]);
+            stats.infillArea += currentW * storyH;
+            addTimber(layerHorizontals, startX, yBottom, -startX, yBottom, 1.2);
+            addTimber(layerHorizontals, startX, yTop, -startX, yTop, 1.2);
+            if (j > 0 && overhang > 0) {
+                let lowerW = (cols * cellW) + ((j-1) * overhang * 2);
+                let lowerStartX = -lowerW / 2;
+                let cW_low = lowerW / cols;
+                for(let i=0; i<=cols; i++) {
+                    let bx = lowerStartX + (i * cW_low);
+                    addTimber(layerVerticals, bx, yBottom, bx, yBottom - 15, 1.5); 
+                }
+            }
+            let actualCellW = currentW / cols;
+            let brustH = yBottom + (storyH * 0.4); 
+            let midY = yBottom + (storyH * 0.5);
+            for (let i = 0; i < cols; i++) {
+                let cellLeft = startX + (i * actualCellW);
+                let cellRight = cellLeft + actualCellW;
+                addTimber(layerVerticals, cellLeft, yBottom, cellLeft, yTop, 1.0);
+                if (i === cols - 1) addTimber(layerVerticals, cellRight, yBottom, cellRight, yTop, 1.0);
+                if (style === 'brust_kreuz') {
+                    addTimber(layerHorizontals, cellLeft, brustH, cellRight, brustH, 0.8);
+                    addTimber(layerDiagonals, cellLeft, yBottom, cellRight, brustH, 0.8);
+                    addTimber(layerDiagonals, cellRight, yBottom, cellLeft, brustH, 0.8);
+                } 
+                else if (style === 'wilder_mann') {
+                    if (i === 0 || i === cols - 1) {
+                        let inner = (i === 0) ? cellRight : cellLeft;
+                        let outer = (i === 0) ? cellLeft : cellRight;
+                        addTimber(layerHorizontals, cellLeft, midY, cellRight, midY, 0.8);
+                        addTimber(layerDiagonals, outer, yBottom, inner, midY, 0.9);
+                        addTimber(layerDiagonals, outer, yTop, inner, midY, 0.9);
+                    } else if (i === 1 || i === cols - 2) {
+                        let center = (i === 1) ? cellLeft : cellRight;
+                        let far = (i === 1) ? cellRight : cellLeft;
+                        addTimber(layerHorizontals, cellLeft, midY, cellRight, midY, 0.8);
+                        addTimber(layerDiagonals, far, yBottom, center, midY, 0.9);
+                        addTimber(layerDiagonals, far, yTop, center, midY, 0.9);
+                    } else {
+                        addTimber(layerHorizontals, cellLeft, brustH, cellRight, brustH, 0.8);
+                    }
+                }
+                else if (style === 'k_streben') {
+                    addTimber(layerHorizontals, cellLeft, midY, cellRight, midY, 0.8); 
+                    if (i % 2 === 0) {
+                        addTimber(layerDiagonals, cellLeft, midY, cellRight, yTop, 0.9);
+                        addTimber(layerDiagonals, cellLeft, midY, cellRight, yBottom, 0.9);
+                    } else {
+                        addTimber(layerDiagonals, cellRight, midY, cellLeft, yTop, 0.9);
+                        addTimber(layerDiagonals, cellRight, midY, cellLeft, yBottom, 0.9);
+                    }
+                }
+                else if (style === 'kopfbänder') {
+                    let braceDist = Math.min(actualCellW * 0.3, storyH * 0.3);
+                    addTimber(layerDiagonals, cellLeft, yTop - braceDist, cellLeft + braceDist, yTop, 0.7);
+                    addTimber(layerDiagonals, cellRight, yTop - braceDist, cellRight - braceDist, yTop, 0.7);
+                }
+            }
+        }
+        if (hasGable) {
+            let j = rows;
+            let currentW = (cols * cellW) + (j * overhang * 2);
+            if (currentW > maxW) maxW = currentW;
+            let startX = -currentW / 2;
+            let yBottom = j * storyH;
+            let gableH = (currentW / 2) * roofPitch;
+            let yTop = yBottom + gableH;
+            maxY = yTop;
+            bgPlaster.push([{x: startX, y: yBottom}, {x: 0, y: yTop}, {x: -startX, y: yBottom}]);
+            stats.infillArea += (currentW * gableH) / 2;
+            addTimber(layerDiagonals, startX, yBottom, 0, yTop, 1.5);
+            addTimber(layerDiagonals, -startX, yBottom, 0, yTop, 1.5);
+            addTimber(layerHorizontals, startX, yBottom, -startX, yBottom, 1.2);
+            addTimber(layerVerticals, 0, yBottom, 0, yTop, 1.2);
+            let gableBays = Math.max(2, Math.floor(cols / 2) * 2);
+            let gCellW = currentW / gableBays;
+            for(let i=1; i<gableBays; i++) {
+                let px = startX + (i * gCellW);
+                if(px !== 0) {
+                    let distFromEdge = i <= gableBays/2 ? (i * gCellW) : currentW - (i * gCellW);
+                    let roofHeightAtX = yBottom + (distFromEdge * roofPitch);
+                    addTimber(layerVerticals, px, yBottom, px, roofHeightAtX, 0.8);
+                    if (i === 1 || i === gableBays - 2) {
+                         let innerPx = px < 0 ? px + gCellW : px - gCellW;
+                         let hY = yBottom + (roofHeightAtX - yBottom) * 0.5;
+                         addTimber(layerHorizontals, px, hY, innerPx, hY, 0.8);
+                    }
+                }
+            }
+        }
+        virtualBounds = { w: maxW, h: maxY };
+    }
+    function drawModelToCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const screenW = canvas.width / dpr;
+        const screenH = canvas.height / dpr;
+        const padding = 60;
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, screenW, screenH);
+        let scale = Math.min(
+            (screenW - padding * 2) / virtualBounds.w,
+            (screenH - padding * 2) / virtualBounds.h
+        );
+        ctx.translate(screenW / 2, screenH - padding);
+        ctx.scale(scale, -scale);
+        const targetPixelThickness = parseInt(uiThick.value);
+        const virtualThicknessBase = targetPixelThickness / scale; 
+        ctx.fillStyle = '#fdfbf7';
+        bgPlaster.forEach(p => {
+            ctx.beginPath();
+            ctx.moveTo(p[0].x, p[0].y);
+            for(let i=1; i<p.length; i++) ctx.lineTo(p[i].x, p[i].y);
+            ctx.closePath();
+            ctx.fill();
+        });
+        ctx.strokeStyle = '#2d1b15';
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'miter';
+        const drawLayer = (layer) => {
+            layer.forEach(line => {
+                ctx.lineWidth = virtualThicknessBase * line.multi;
+                ctx.beginPath();
+                ctx.moveTo(line.x1, line.y1);
+                ctx.lineTo(line.x2, line.y2);
+                ctx.stroke();
+            });
+        };
+        drawLayer(layerDiagonals);
+        drawLayer(layerHorizontals);
+        drawLayer(layerVerticals);
+        ctx.restore();
+    }
+    function generate() {
+        buildVirtualModel();
+        drawModelToCanvas();
+        
+    }
+    window.onload = () => {
+        resizeCanvas(); 
+    };
+</script>
+</body>
+</html>
