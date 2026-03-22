@@ -10,7 +10,7 @@
 ---
 
 ### 📸 Nach der Erstellung: Von der Skizze zum Rendering
-![Beispiele aus dem Generator](Vorlage-zu-KI-1.jpg)
+![Beispiele aus dem Generator](Vorlage-zu-KI_1.jpg)
 ![](Vorlage-zu-KI_2.jpg)
 ---
 
