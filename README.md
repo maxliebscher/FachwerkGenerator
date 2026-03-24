@@ -15,13 +15,14 @@
 </p>
 
 ### 📸 Nach der Erstellung: Von der Skizze zum Rendering
-<p align="center">
-  <img src="Vorlage-zu-KI_3.jpg" alt="Beispiele aus dem Generator unter Nutzung von 'NanoBanana 2 Pro" width="49%"/>
-  <img src="Vorlage-zu-KI_1.jpg" alt="" width="49%"/>
 </p>
 <p align="center">
   <img src="Vorlage-zu-KI_2.jpg" alt="Iterationen aus Quellbild" width="98%"/>
 </p>
+<p align="center">
+  <img src="Vorlage-zu-KI_3.jpg" alt="Beispiele aus dem Generator unter Nutzung von 'NanoBanana 2 Pro" width="49%"/>
+  <img src="Vorlage-zu-KI_1.jpg" alt="" width="49%"/>
+
 
 ---
 
