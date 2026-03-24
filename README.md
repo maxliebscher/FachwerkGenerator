@@ -5,18 +5,24 @@
 
 > 🇬🇧 **Note for English speakers:** **[Fachwerkgenerator.de](https://fachwerkgenerator.de)**  is a browser-based, open-source tool for the visual design, exploration, and conceptualization of harmonious timber-framed structures. It is part of the architectural aesthetics project FassadenSchmied. The interface and documentation of this tool are currently in German. Since it's a lightweight HTML application, it is recommended to use the browser's built-in translation feature (e.g., in Chrome or Edge) to translate the tool on the fly.
 
+
 **[Fachwerkgenerator.de](https://fachwerkgenerator.de)** ist ein browserbasiertes Open-Source-Tool zur visuellen Gestaltung, Erforschung und Konzeption harmonischer Fachwerk-Strukturen. Es ist Teil des Architektur-Ästhetik-Projekts **FassadenSchmied**.
 
 ---
+### 💻 Screenshot aus dem Generator
+<p align="center">
+  <img src="screenshot-1.jpg" alt="Beispiel aus dem Fachwerkgenerator" width="98%"/>
+</p>
 
 ### 📸 Nach der Erstellung: Von der Skizze zum Rendering
-![Beispiele aus dem Generator unter Nutzung von 'NanoBanana 2 Pro' ](Vorlage-zu-KI_3.jpg)
+<p align="center">
+  <img src="Vorlage-zu-KI_3.jpg" alt="Beispiele aus dem Generator unter Nutzung von 'NanoBanana 2 Pro" width="49%"/>
+  <img src="Vorlage-zu-KI_1.jpg" alt="" width="49%"/>
+</p>
+<p align="center">
+  <img src="Vorlage-zu-KI_2.jpg" alt="Iterationen aus Quellbild" width="98%"/>
+</p>
 
-***
-![](Vorlage-zu-KI_1.jpg)
-
-***
-![](Vorlage-zu-KI_2.jpg)
 ---
 
 ### ✨ Features
