@@ -11,9 +11,11 @@
 
 ### 📸 Nach der Erstellung: Von der Skizze zum Rendering
 ![Beispiele aus dem Generator unter Nutzung von 'NanoBanana 2 Pro' ](Vorlage-zu-KI_3.jpg)
-<br>
+
+***
 ![](Vorlage-zu-KI_1.jpg)
-<br>
+
+***
 ![](Vorlage-zu-KI_2.jpg)
 ---
 
