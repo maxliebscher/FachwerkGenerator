@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:image" content="https://fachwerkgenerator.de/preview.jpg">
+    <title>Max Liebschers' FassadenSchmied: Fachwerk-Generator v0.7_refactor</title>
+    <link rel="canonical" href="https://fachwerkgenerator.de/" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <header class="bg-slate-900 text-slate-100 shadow py-2 px-4 flex justify-between items-center border-b-[3px] border-emerald-500 z-20 flex-shrink-0 flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+            <div>
+                <h1 class="text-lg font-bold tracking-tight">Max Liebschers' FassadenSchmied: Fachwerk-Generator</h1>
+                <p class="text-[15px] text-slate-400">V0.7_refactor "Hagel & Mansarden"</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700 flex-wrap">
+            <label class="text-[14px] text-slate-300 ml-1" title="Zoom">🔍</label>
+            <input type="range" id="camZoomSlider" min="0.1" max="5" step="0.05" value="1" class="w-16">
+            <div class="w-px h-4 bg-slate-600 hidden sm:block"></div>
+            <label class="text-[14px] text-slate-300 ml-1" title="Pan X">↔️</label>
+            <input type="range" id="camPanXSlider" min="-1000" max="1000" step="5" value="0" class="w-16">
+            <label class="text-[14px] text-slate-300 ml-1" title="Pan Y">↕️</label>
+            <input type="range" id="camPanYSlider" min="-1000" max="1000" step="5" value="0" class="w-16">
+            <button id="btnResetCam" class="text-[10px] bg-slate-600 hover:bg-slate-500 text-white px-1.5 py-0.5 rounded transition-colors ml-1">Reset</button>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700">
+            <select id="colorPreset" class="bg-slate-700 text-white border border-slate-500 text-[12px] rounded px-1.5 py-0.5 font-bold cursor-pointer outline-none">
+                <option value="default">🎨 Holz: Braun</option>
+                <option value="yellow">🎨 Holz: Gelb</option>
+                <option value="green">🎨 Holz: Grün</option>
+                <option value="red">🎨 Holz: Rot</option>
+                <option value="teal" selected>🎨 Holz: Türkis</option>
+                <option value="lilac">🎨 Holz: Flieder</option>
+                <option value="rose">🎨 Holz: Hellrosé</option>
+                <option value="custom">🎨 Holz: Custom...</option>
+            </select>
+            <input type="color" id="customTimber" value="#1e404f" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent hidden">
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
+                Putz 1: <input type="color" id="customPlaster" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Zweite Putzfarbe für Etagen">
+                Putz 2: <input type="color" id="customPlaster2" value="#e2d5c3" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
+                Stein: <input type="color" id="customStone" value="#94a3b8" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
+                Giebel: <input type="color" id="customGable" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
+                Turm: <input type="color" id="customTurret" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
+                Zwerchh.: <input type="color" id="customDormer" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+            <div class="w-px h-4 bg-slate-600"></div>
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
+                Dach: <input type="color" id="customTurretRoof" value="#475569" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            </label>
+        </div>
+        <div class="flex gap-2">
+            <button id="btnExportImg" class="bg-blue-600 hover:bg-blue-500 text-xs rounded px-2 py-1 font-bold text-white transition-colors">🖼️ Bild speichern</button>
+            <button id="btnExport" class="bg-emerald-600 hover:bg-emerald-500 text-xs rounded px-2 py-1 font-bold text-white transition-colors">↓ Export</button>
+            <label class="bg-amber-600 hover:bg-amber-500 text-xs rounded px-2 py-1 font-bold text-white cursor-pointer transition-colors">
+                ↑ Import <input type="file" id="btnImport" accept=".json" class="hidden">
+            </label>
+        </div>
+    </header>
+    <div class="flex flex-1 overflow-hidden">
+    <aside id="sidebar" class="w-[720px] min-w-[320px] bg-white overflow-y-auto p-3 shadow-sm z-10 flex-shrink-0">
+        <div class="flex flex-wrap gap-4 items-start">
+            <div class="flex-[5] min-w-[280px] grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3 items-start content-start">
+                <div class="border border-amber-200 bg-amber-50/30 p-2 rounded-lg border-l-4 border-l-amber-500 shadow-sm col-span-full">
+                    <div class="flex items-center justify-between mb-2 pb-1 border-b border-amber-100">
+                        <label class="text-[11px] font-bold uppercase text-amber-800">Raster</label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-3 pb-3 border-b border-amber-100/50">
+                        <div>
+                            <label class="control-label"><span>Geschosse</span><span id="rowsVal" class="control-value">4</span></label>
+                            <input type="range" id="paramRows" min="1" max="10" value="4" class="w-full">
+                            <div class="grid grid-cols-2 gap-1 mt-1">
+                                <button id="btnAddFloorBottom" class="bg-slate-200 hover:bg-slate-300 text-[10px] font-bold text-slate-600 py-0.5 rounded transition-colors" title="Geschoss unten einfügen (Neues EG)">+ Unten</button>
+                                <button id="btnAddFloorTop" class="bg-slate-200 hover:bg-slate-300 text-[10px] font-bold text-slate-600 py-0.5 rounded transition-colors" title="Geschoss oben anbauen">+ Oben</button>
+                                <button id="btnRemoveFloorBottom" class="bg-red-100 hover:bg-red-200 text-[10px] font-bold text-red-700 py-0.5 rounded transition-colors" title="Erdgeschoss löschen">- Unten</button>
+                                <button id="btnRemoveFloorTop" class="bg-red-100 hover:bg-red-200 text-[10px] font-bold text-red-700 py-0.5 rounded transition-colors" title="Oberstes Geschoss löschen">- Oben</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="control-label"><span>Gefache</span><span id="colsVal" class="control-value">10</span></label>
+                            <input type="range" id="paramCols" min="2" max="16" step="1" value="10" class="w-full">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-x-4 gap-y-3">
+                        <div>
+                            <label class="control-label"><span>Balken-Dicke (px)</span><span id="thickVal" class="control-value">8</span></label>
+                            <input type="range" id="paramThick" min="3" max="24" value="7" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label"><span>Raster-Bruch</span><span id="asymVal" class="control-value">0.1</span></label>
+                            <input type="range" id="paramAsym" min="-1" max="1" step="0.1" value="0.1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label"><span>Alterung</span><span id="warpVal" class="control-value">0</span></label>
+                            <input type="range" id="paramWarp" min="0" max="50" step="1" value="0" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label text-pink-700" title="Verteilt historisches Zierwerk (Inschriften, Ranken, Schnitzereien)"><span>Zier-Dekor</span><span id="decorGlobalVal" class="control-value">0%</span></label>
+                            <input type="range" id="paramGlobalDecor" min="0" max="100" step="5" value="0" class="w-full">
+                        </div>
+                        <div class="mt-1">
+                            <div class="flex items-center gap-2 mb-1"><button id="btnRandomize" class="flex-none w-[115px] flex flex-col items-center justify-center border border-red-400 bg-red-50 hover:bg-red-100 rounded py-0.5 transition-all shadow-sm group mx-1 shrink-0">
+        <span class="text-red-700 font-bold text-xs group-hover:scale-110 transition-transform leading-tight">🎲 Zufall</span>
+        <span class="text-[7px] text-red-500 font-bold uppercase mt-px leading-none">löscht Entwurf</span>
+    </button>
+    <button id="btnResetMinimal" onclick="loadState(BASE_HOUSE_CONFIG)" class="flex-none w-[115px] flex flex-col items-center justify-center border border-blue-300 bg-blue-50 hover:bg-blue-100 rounded py-0.5 transition-all shadow-sm group mx-1 shrink-0">
+        <span class="text-blue-700 font-bold text-xs group-hover:scale-110 transition-transform leading-tight">🌱 Basis-Haus</span>
+        <span class="text-[7px] text-blue-500 font-bold uppercase mt-px leading-none">auf null setzen</span>
+    </button></div>
+                            <input type="hidden" id="paramDecorScheme" value="hist1">
+                        </div>
+                                            </div>
+                </div>
+                <div class="border border-indigo-200 bg-indigo-50/30 p-2 rounded-lg border-l-4 border-l-indigo-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-2 pb-1 border-b border-indigo-100">
+                        <label class="text-[11px] font-bold uppercase text-indigo-800">Turm-Details</label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <div class="col-span-2">
+                            <label class="control-label"><span>Turm-Breite</span><span id="turretWVal" class="control-value">1.4x</span></label>
+                            <input type="range" id="paramTurretW" min="0.5" max="2.5" step="0.1" value="1.4" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label">Turm-Art</label>
+                            <select id="paramTurretStyle" class="floor-select m-0"></select>
+                        </div>
+                        <div>
+                            <label class="control-label">Turm-Dach</label>
+                            <select id="paramTurretRoofStyle" class="floor-select m-0">
+                                <option value="spitz" selected>Spitz (Normal)</option>
+                                <option value="flach">Zeltdach (Flach)</option>
+                                <option value="krueppel">Krüppelwalm</option>
+                                <option value="barock">Zwiebel / Barock</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="border border-blue-200 bg-blue-50/30 p-2 rounded-lg border-l-4 border-l-blue-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-2 pb-1 border-b border-blue-100">
+                        <label class="text-[11px] font-bold uppercase text-blue-800">Fenster</label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <div>
+                            <label class="control-label"><span>Fenster-Dichte</span><span id="windowDVal" class="control-value">60%</span></label>
+                            <input type="range" id="paramWindowD" min="0" max="100" step="5" value="60" class="w-full">
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <input type="checkbox" id="paramWinFrame" checked class="cursor-pointer">
+                                <label for="paramWinFrame" class="text-[10px] text-blue-900 font-semibold cursor-pointer leading-none mt-0.5 hover:text-blue-700 transition-colors">Echte Rahmen</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="control-label text-sky-700"><span>Zufall-Größe</span><span id="winRandomVal" class="control-value">0%</span></label>
+                            <input type="range" id="paramWinRandom" min="0" max="60" step="5" value="0" class="w-full">
+                        </div>
+                        <div class="col-span-2 pt-1 border-t border-blue-100/50 mt-1 grid grid-cols-2 gap-2">
+<div>
+<label class="control-label text-blue-700"><span>Sprossen-Dicke</span><span id="winSprossenThickVal" class="control-value">40%</span></label>
+                            <input type="range" id="paramWinSprossenThick" min="10" max="100" step="5" value="40" class="w-full">
+</div>
+<div>
+<label class="control-label text-blue-700"><span>Muster-Größe</span><span id="winPatternScaleVal" class="control-value">100%</span></label>
+<input type="range" id="paramWinPatternScale" min="30" max="300" step="10" value="100" class="w-full">
+</div>
+                        </div>
+                        <div class="col-span-2 grid grid-cols-2 gap-2 border-t border-blue-100 pt-2 mt-1">
+                            <div>
+                                <label class="control-label">Form</label>
+                                <select id="paramWinStyle" class="floor-select m-0 font-bold text-blue-900">
+                                    <option value="quadrat" selected>Eckig (Normal)</option>
+                                    <option value="rundbogen">Rundbogen</option>
+                                    <option value="spitzbogen">Spitzbogen</option>
+                                    <option value="flachbogen">Flachbogen</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="control-label">Sprossen</label>
+                                <select id="paramWinSprossen" class="floor-select m-0 text-blue-900 font-bold">
+                                    <option value="kreuz">Kreuz (+)</option>
+                                    <option value="steg">Mittelsteg (|)</option>
+                                    <option value="quersteg">Querstrich (-)</option>
+                                    <option value="t_form">T-Form (T)</option>
+                                    <option value="gitter">Gitter (#)</option>
+                                    <option value="rauten">Rauten (Bleiglas)</option>
+                                    <option value="butzen">Butzenscheiben</option>
+                                    <option value="halbkreis">Halbkreis (Schuppen)</option>
+                                    <option value="mix" selected>🎲 Mix (Historisch)</option>
+                                    <option value="mix_modern">🎲 Mix (Modern: Kreuz/Steg/T)</option>
+                                    <option value="keine">Keine</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="control-label">Glas / Licht</label>
+                                <select id="paramWinGlass" class="floor-select m-0">
+                                    <option value="hell" selected>Hell (Normal)</option>
+                                    <option value="altglas">Altglas (Grünlich)</option>
+                                    <option value="abend">Beleuchtet (Warmgelb)</option>
+                                    <option value="dunkel">Nacht (Dunkelblau)</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2 grid grid-cols-2 gap-2 border-t border-blue-100 pt-2 mt-1">
+                                <div>
+                                    <label class="control-label">Fensterläden</label>
+                                    <select id="paramWinShutters" class="floor-select m-0 text-blue-900 font-bold">
+                                        <option value="keine" selected>Keine</option>
+                                        <option value="z_beschlag">Z-Beschlag (Klassisch)</option>
+                                        <option value="lamellen">Lamellen (Süden)</option>
+                                        <option value="kassetten">Kassetten (Edel)</option>
+                                        <option value="brett">Einfache Bretter</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="control-label">Laden-Farbe</label>
+                                    <input type="color" id="paramWinShutterColor" value="#1e404f" class="h-6 w-full p-0 border-0 rounded cursor-pointer bg-transparent mt-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="border border-emerald-200 bg-emerald-50/30 p-2 rounded-lg border-l-4 border-l-emerald-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-1 pb-1 border-b border-emerald-100">
+                        <label class="text-[11px] font-bold uppercase text-emerald-800 cursor-pointer" for="paramGable">Dächer generieren</label>
+                        <input type="checkbox" id="paramGable" checked class="w-3 h-3 text-emerald-600 rounded cursor-pointer">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2 pt-1">
+                        <div>
+                            <label class="control-label"><span>Anzahl Giebel</span><span id="gableCountVal" class="control-value">1</span></label>
+                            <input type="range" id="paramGableCount" min="1" max="5" step="1" value="1" class="w-full">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                            <label class="control-label">Gauben-Paare</label>
+                            <span id="sideDormerCountVal" class="control-value">0</span>
+                        </div>
+                        <input type="range" id="paramSideDormerCount" min="0" max="5" step="1" value="0" class="w-full">
+                        <select id="paramSideDormerStyle" class="floor-select m-0 mt-2 font-bold text-emerald-900">
+                            <option value="schlepp" selected>Art: Schleppdach (Flach)</option>
+                            <option value="fledermaus">Art: Fledermaus</option>
+                            <option value="walm">Art: Walmdach</option>
+                            <option value="dreieck">Art: Dreiecksgaube (Spitz)</option>
+                            <option value="rund">Art: Rundbogengaube</option>
+                        </select>
+                        <div class="mt-2 pt-2 border-t border-emerald-100/50">
+                            <label class="control-label text-emerald-700"><span>Position (X)</span><span id="sideDormerXVal" class="control-value">0</span></label>
+                            <input type="range" id="paramSideDormerX" min="-5" max="35" step="1" value="0" class="w-full" title="Gauben nach innen/außen verschieben">
+                        </div>
+                        </div>
+                        <div class="col-span-2 grid grid-cols-2 gap-2 border-t border-emerald-100 pt-2 mt-1">
+                            <div>
+                                <label class="control-label"><span>Überstand</span><span id="roofOverVal" class="control-value">60</span></label>
+                                <input type="range" id="paramRoofOverhang" min="0" max="60" step="5" value="60" class="w-full">
+                            </div>
+                            <div>
+                                <label class="control-label"><span>Trauf-Höhe</span><span id="corniceHVal" class="control-value">30</span></label>
+                                <input type="range" id="paramCorniceHeight" min="10" max="100" step="5" value="30" class="w-full">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="control-label text-emerald-800">Traufgesimse</label>
+                                <select id="paramCornice" class="floor-select">
+                                    <option value="none">Trauf-Gesims: Streben</option>
+                                    <option value="knaggen">Trauf-Gesims: Vouten-Konsolen</option>
+                                    <option value="konsolen">Trauf-Gesims: Konsolen</option>
+                                    <option value="abgetreppt">Trauf-Gesims: Abgetreppt</option>
+                                    <option value="schiffskehle">Trauf-Gesims: Schiffskehle</option>
+                                    <option value="neidkoepfe">Trauf-Gesims: Neidköpfe</option>
+                                    <option value="stamm_5eck">Trauf-Gesims: Balkenköpfe (Spitz/Gotisch)</option>
+                                    <option value="stamm_spitz">Trauf-Gesims: Balkenköpfe (Massiv/Stumpf)</option>
+                                    <option value="stamm_quadrat">Trauf-Gesims: Balkenköpfe (Robustes Viereck)</option>
+                                    <option value="stamm_rund">Trauf-Gesims: Balkenköpfe (Breit & Abgerundet)</option></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="gableControlsContainer" class="flex flex-col gap-2 mt-1"></div>
+                </div>
+                <div class="border border-teal-200 bg-teal-50/30 p-2 rounded-lg border-l-4 border-l-teal-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-1 pb-1 border-b border-teal-100">
+                        <label class="text-[11px] font-bold uppercase text-teal-800 cursor-pointer" for="toggleDormer">Zwerchhaus (Dormer)</label>
+                        <div class="flex items-center gap-2">
+                            <label class="text-[9px] text-teal-700 uppercase font-bold cursor-pointer" for="paramDormerWin">Fenster</label>
+                            <input type="checkbox" id="paramDormerWin" checked class="w-3 h-3 text-teal-600 rounded cursor-pointer">
+                            <div class="w-px h-3 bg-teal-300 mx-1"></div>
+                            <input type="checkbox" id="toggleDormer" checked class="w-3 h-3 text-teal-600 rounded focus:ring-teal-500 cursor-pointer">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-1 pt-1">
+                        <select id="paramDormerShape" class="floor-select col-span-2 font-bold bg-white">
+                            <option value="sattel" selected>Dachform: Satteldach</option>
+                            <option value="halbwalm">Dachform: Halbwalm (Dezent)</option><option value="krueppel">Dachform: Krüppelwalm</option>
+                            <option value="mansard">Dachform: Mansarddach</option>
+                            <option value="stufe">Giebel: Stufengiebel</option>
+                            <option value="barock">Giebel: Barockschwung</option>
+                        </select>
+                    </div>
+                    <div id="dormerStepCont" class="grid grid-cols-2 gap-2 mb-1 pt-1 border-t border-teal-100 hidden">
+                        <div>
+                            <label class="control-label text-teal-700"><span>Stufen</span><span id="dormerStepsVal" class="control-value">5</span></label>
+                            <input type="range" id="paramDormerSteps" min="1" max="12" step="1" value="5" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label text-teal-700"><span>Höhe</span><span id="dormerStepHVal" class="control-value">0.95</span></label>
+                            <input type="range" id="paramDormerStepHeight" min="0.1" max="1.5" step="0.05" value="0.95" class="w-full">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-1 border-t border-teal-100 pt-1 mt-1">
+                        <div>
+                            <label class="control-label"><span>Breite</span><span id="dormerWVal" class="control-value">4.5</span></label>
+                            <input type="range" id="paramDormerW" min="0.5" max="9" step="0.5" value="4.5" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label"><span>Wand-Höhe</span><span id="dormerHVal" class="control-value">0.60x</span></label>
+                            <input type="range" id="paramDormerH" min="0.1" max="2.5" step="0.05" value="0.60" class="w-full">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="control-label"><span>Dachneigung</span><span id="dormerPitchVal" class="control-value">1.2</span></label>
+                            <input type="range" id="paramDormerPitch" min="0.5" max="2.5" step="0.1" value="1.2" class="w-full">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="control-label"><span>Giebel-Etagen</span><span id="dormerTiersVal" class="control-value">2</span></label>
+                            <input type="range" id="paramDormerTiers" min="1" max="4" step="1" value="2" class="w-full">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <select id="paramDormerStyle" class="floor-select m-0"></select>
+                        <select id="paramDormerGable" class="floor-select m-0"></select>
+                    </div>
+                    <div id="dormerArchCont" class="grid grid-cols-2 gap-2 mt-1 pt-1 border-t border-teal-100 hidden">
+                        <div><label class="control-label text-amber-600"><span>Bögen</span><span id="dormerArchVal" class="control-value">3</span></label><input type="range" id="paramDormerArchCount" min="1" max="12" value="3" class="w-full"></div>
+                        <div><label class="control-label text-amber-600">Form</label>
+                            <select id="paramDormerArchType" class="floor-select m-0">
+                                <option value="rund" selected>Rund</option>
+                                <option value="spitz">Spitz</option>
+                                <option value="korb">Korb</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-[7] min-w-[280px] flex flex-col gap-3">
+                <div class="bg-slate-100 p-2 rounded-lg border border-slate-200 shadow-sm">
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1 flex justify-between items-center">Fassaden-Ebenen 📜</h3>
+                    <div id="floorControlsContainer" class="flex flex-col gap-2"></div>
+                </div>
+                <div class="border border-sky-200 bg-sky-50/30 p-2 rounded-lg border-l-4 border-l-sky-500 shadow-sm">
+                    <div class="flex items-center justify-between mb-1 pb-1 border-b border-sky-100">
+                        <label class="text-[11px] font-bold uppercase text-sky-800 cursor-pointer" for="paramSockel">Sockelgeschoss</label>
+                        <input type="checkbox" id="paramSockel" checked class="w-3 h-3 text-sky-600 rounded cursor-pointer">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-2 pt-1">
+                        <div class="col-span-3">
+                            <label class="control-label"><span>Sockel-Höhe</span><span id="sockelHVal" class="control-value">40</span></label>
+                            <input type="range" id="paramSockelH" min="10" max="250" step="5" value="40" class="w-full">
+                        </div>
+                        <div>
+                            <label class="control-label">Sockel-Stil</label>
+                            <select id="paramSockelStyle" class="floor-select m-0">
+                                <option value="stein_gerade" selected>Stein (Gerade)</option>
+                                <option value="stein_schraeg">Burgmauer (Schräg)</option>
+                                <option value="holz_pfeiler">Holzpfeiler (Halle)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="control-label">Eck-Quaderung</label>
+                            <select id="paramSockelQuader" class="floor-select m-0">
+                                <option value="none" selected>Keine</option>
+                                <option value="rustikal">Rustikal / Mittelalter</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="control-label">Mauerreste</label>
+                            <select id="paramRuine" class="floor-select m-0 text-sky-900 font-bold">
+                                <option value="none" selected>Nein</option>
+                                <option value="overlay">Ja (Overlay)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-1 pt-1 pb-1 border-b border-sky-100 border-t">
+                        <label class="text-[11px] font-bold uppercase text-sky-800">Erdgeschoss Tür/Tor</label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2 pt-1">
+                        <div>
+                            <label class="control-label">Tür-Art</label>
+                            <select id="paramDoorType" class="floor-select m-0">
+                                <option value="none">Keine</option>
+                                <option value="einzeltuer" selected>Einzeltür</option>
+                                <option value="doppeltor">Doppeltor</option>
+                                <option value="rundbogen">Rundbogentor</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="control-label">Fassung</label>
+                            <select id="paramDoorFrame" class="floor-select m-0">
+                                <option value="holz">Holzrahmen</option>
+                                <option value="stein">Steingewände</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="control-label"><span>Position (Fach)</span><span id="doorPosVal" class="control-value">5</span></label>
+                            <input type="range" id="paramDoorPos" min="1" max="10" step="1" value="5" class="w-full">
+                        </div>
+                            <div class="col-span-2 border-t border-sky-100 pt-2 mt-1">
+                            <label class="control-label">EG-Auskragung (Ecken)</label>
+                            <div class="flex gap-1">
+                                <select id="paramEgCorners" class="floor-select m-0 flex-1">
+                                    <option value="gerade" selected>Gerade (Normal)</option>
+                                    <option value="geschwungen">Geschwungen</option>
+                                    <option value="abgeschraegt">Abgeschrägt</option>
+                                    <option value="pfeiler">Renaissance-Pfeiler (Säule)</option>
+                                    <option value="verzahnt">Verzahnt (Historisch)</option>
+                                </select>
+                                <select id="paramEgCornersSide" class="floor-select m-0 w-[60px] px-0 text-center" title="Seite der Auskragung">
+                                    <option value="both" selected>L+R</option>
+                                    <option value="left">Nur L</option>
+                                    <option value="right">Nur R</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+        <div id="resizer">
+            <div class="resizer-line"></div>
+        </div>
+        <main class="flex-1 p-4 flex flex-col bg-slate-200/50 min-h-0 min-w-[300px]">
+            <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-300 flex-1 flex flex-col min-h-0">
+                <div id="canvas-wrapper" class="relative">
+                    <canvas id="fachwerkCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+<button id="btnOpenInfo" class="fixed bottom-5 right-5 w-12 h-12 bg-slate-800 text-white rounded-full shadow-lg border-2 border-slate-600 flex items-center justify-center font-serif italic text-2xl hover:bg-slate-700 hover:scale-110 transition-transform z-40" title="Projekt Info">
+        i
+    </button>
+    <div id="infoModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 backdrop-blur-sm opacity-0 transition-opacity duration-300 overflow-y-auto">
+        <div id="infoModalContent" class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 m-4 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">FassadenSchmied</h2>
+                    <p class="text-slate-500 font-medium italic mt-1">Fachwerk-Generator / <a href="https://fachwerkgenerator.de" target="_blank" class="hover:underline text-blue-600">fachwerkgenerator.de</a></p>
+                </div>
+                <button id="btnCloseInfo" class="text-slate-400 hover:text-slate-700 p-2 transition-colors bg-slate-100 hover:bg-slate-200 rounded-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="text-slate-700 space-y-6 text-base leading-relaxed">
+                <div class="bg-indigo-50 text-indigo-900 p-4 rounded-lg border border-indigo-200 text-sm shadow-sm">
+                    <strong>📸 Zeige deine Entwürfe!</strong><br>
+                    Teile deine generierten Fachwerkhäuser gerne auf Social Media mit den Hashtags <strong>#fassadenschmied</strong> und <strong>#fachwerkgenerator</strong> oder markiere <strong>@fassadenschmied</strong>.
+                </div>
+                <div>
+                 <div class="pb-4">
+                    <h3 class="font-bold text-slate-800 mb-2 text-lg underline decoration-slate-300 underline-offset-4">Konzept & Philosophie</h3>
+                    <p><strong>FassadenSchmied</strong> ist ein Forschungs- und Designprojekt zur Architektur-Ästhetik. Der Fokus liegt auf einer menschenzentrierten Formensprache von Gebäuden. Gestaltungsentscheidungen orientieren sich an Wahrnehmung, Proportion, Gliederung und Rhythmus, um das Wohlbefinden im urbanen Raum zu fördern. Weitere Informationen zum Projekt und Vorhaben gibt es unter <a href="https://fassadenschmied.de/" target="_blank" class="text-blue-600 hover:underline font-semibold">fassadenschmied.de</a>.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-2 text-lg underline decoration-slate-300 underline-offset-4">Über das Modul</h3>
+                    <p>Der <strong>FachwerkGenerator</strong> unterstützt die visuelle Entwicklung von Fachwerk- und Strukturmustern. Durch einfache Regeln erzeugt das Modul Fassadenelemente, die iterativ angepasst und kombiniert werden können – ideal für Konzeptentwicklung, Sanierung oder die visuelle Aufwertung von Gebäuden.</p>
+                </div>
+                <div class="bg-emerald-50 text-emerald-900 p-4 rounded-lg border border-emerald-200 text-sm shadow-sm">
+                    <strong>🌱 Nachhaltigkeitsaspekt:</strong> Fachwerkhäuser können über Jahrhunderte stehen. Sie sind vollständig aus lokalen Naturmaterialien baubar, folgen einem verständlichen Baukastensystem, sind flexibel veränderbar, mitwachsend und von Natur aus erdbebensicher.
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
+                    <h4 class="font-bold text-blue-900 mb-1">Überfordert von den vielen Optionen?</h4>
+                    <p class="text-blue-800 text-sm mb-3">Nutze den <strong>🎲 Zufall</strong> Button, um dich inspirieren zu lassen! Für ein besseres Verständnis der Basis-Einstellungen stehen auch frühere, vereinfachte Versionen zur Verfügung:</p>
+                    <a href="https://github.com/maxliebscher/FachwerkGenerator" target="_blank" class="inline-flex items-center gap-1 text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-sm font-bold transition-colors">
+                        → Frühe Versionen & Tutorials auf GitHub
+                    </a>
+                </div>
+                <div class="bg-amber-50 text-amber-800 p-4 rounded-lg border border-amber-300 text-sm shadow-sm">
+                    <strong>⚠️ Wichtiger Hinweis & Haftungsausschluss:</strong><br>
+                    Dieses Tool dient <em>ausschließlich</em> der visuellen Gestaltung. Es ersetzt <strong>keine</strong> statische oder bauplanerische Prüfung. Die generierten Vorschläge sind reine Entwurfsideen, keine Baupläne! Es gibt keine Garantie für technische Funktionalität oder die korrekte Verwendung architektonischer Fachbegriffe. Es besteht <strong>kein Anspruch auf Support</strong>.
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
+                    <h4 class="font-bold text-slate-800 mb-1">Feedback & Kooperation</h4>
+                    <p class="mb-1">Bugs und technische Probleme bitte idealerweise direkt über <a href="https://github.com/maxliebscher/FachwerkGenerator/issues" target="_blank" class="text-blue-600 hover:underline font-semibold">GitHub Issues</a> melden.</p>
+                    <p>Für wichtige Anfragen oder Zusammenarbeit:<br>
+                    <a href="#" id="c-email" class="text-blue-600 hover:underline font-semibold">Lade Kontakt...</a></p>
+                </div>
+                <div class="border-t border-slate-200 pt-5 mt-5 text-xs text-slate-500 text-center">
+                    <strong>Provider Information / Impressum:</strong><br>
+                    <span id="c-imprint">Lade Adresse...</span><br>
+                    <em>[Nur für Amtspost. Keine Besucher-Adresse.]</em>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8">
+                <a href="https://buymeacoffee.com/maxliebscher" target="_blank" class="flex items-center justify-center gap-2 bg-[#FFDD00] hover:bg-[#FFC300] text-slate-900 py-2.5 px-2 rounded-lg font-bold transition-all shadow-md text-sm">
+                    ☕ Buy Me a Coffee
+                </a>
+                <a href="https://paypal.me/maxliebscher" target="_blank" class="flex items-center justify-center gap-2 bg-[#0070BA] hover:bg-[#005ea6] text-white py-2.5 px-2 rounded-lg font-bold transition-all shadow-md text-sm">
+                    🅿️ PayPal
+                </a>
+                <a href="https://github.com/maxliebscher/FachwerkGenerator" target="_blank" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white py-2.5 px-2 rounded-lg font-bold transition-all shadow-md text-sm">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+            </div>
+            <div class="mt-5 text-center">
+                <a href="https://maxliebscher.com" target="_blank" class="text-slate-400 hover:text-blue-600 hover:underline text-sm font-bold transition-colors">maxliebscher.com</a>
+            </div>
+        </div>
+    </div>
+        <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
