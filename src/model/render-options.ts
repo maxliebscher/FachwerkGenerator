@@ -63,6 +63,77 @@ export const pentRoofOptions: readonly SelectOption[] = [
 
 export type PentRoofOption = SelectOptionValue<typeof pentRoofOptions>;
 
+export const turretRoofOptions: readonly SelectOption[] = [
+  { value: "spitz", label: "Spitz (Normal)" },
+  { value: "flach", label: "Zeltdach (Flach)" },
+  { value: "krueppel", label: "Krüppelwalm" },
+  { value: "barock", label: "Zwiebel / Barock" },
+] as const;
+
+export type TurretRoofOption = SelectOptionValue<typeof turretRoofOptions>;
+
+export const windowShapeOptions: readonly SelectOption[] = [
+  { value: "quadrat", label: "Eckig (Normal)" },
+  { value: "rundbogen", label: "Rundbogen" },
+  { value: "spitzbogen", label: "Spitzbogen" },
+  { value: "flachbogen", label: "Flachbogen" },
+] as const;
+
+export type WindowShapeOption = SelectOptionValue<typeof windowShapeOptions>;
+
+export const windowMuntinOptions: readonly SelectOption[] = [
+  { value: "kreuz", label: "Kreuz (+)" },
+  { value: "steg", label: "Mittelsteg (|)" },
+  { value: "quersteg", label: "Querstrich (-)" },
+  { value: "t_form", label: "T-Form (T)" },
+  { value: "gitter", label: "Gitter (#)" },
+  { value: "rauten", label: "Rauten (Bleiglas)" },
+  { value: "butzen", label: "Butzenscheiben" },
+  { value: "halbkreis", label: "Halbkreis (Schuppen)" },
+  { value: "mix", label: "Mix (Historisch)" },
+  { value: "mix_modern", label: "Mix (Modern: Kreuz/Steg/T)" },
+  { value: "keine", label: "Keine" },
+] as const;
+
+export type WindowMuntinOption = SelectOptionValue<typeof windowMuntinOptions>;
+
+export const windowGlassOptions: readonly SelectOption[] = [
+  { value: "hell", label: "Hell (Normal)" },
+  { value: "altglas", label: "Altglas (Grünlich)" },
+  { value: "abend", label: "Beleuchtet (Warmgelb)" },
+  { value: "dunkel", label: "Nacht (Dunkelblau)" },
+] as const;
+
+export type WindowGlassOption = SelectOptionValue<typeof windowGlassOptions>;
+
+export const windowShutterOptions: readonly SelectOption[] = [
+  { value: "keine", label: "Keine" },
+  { value: "z_beschlag", label: "Z-Beschlag (Klassisch)" },
+  { value: "lamellen", label: "Lamellen (Süden)" },
+  { value: "kassetten", label: "Kassetten (Edel)" },
+  { value: "brett", label: "Einfache Bretter" },
+] as const;
+
+export type WindowShutterOption = SelectOptionValue<typeof windowShutterOptions>;
+
+export const sideDormerStyleOptions: readonly SelectOption[] = [
+  { value: "schlepp", label: "Schleppdach (Flach)" },
+  { value: "fledermaus", label: "Fledermaus" },
+  { value: "walm", label: "Walmdach" },
+  { value: "dreieck", label: "Dreiecksgaube (Spitz)" },
+  { value: "rund", label: "Rundbogengaube" },
+] as const;
+
+export type SideDormerStyleOption = SelectOptionValue<typeof sideDormerStyleOptions>;
+
+export const archShapeOptions: readonly SelectOption[] = [
+  { value: "rund", label: "Rund" },
+  { value: "spitz", label: "Spitz" },
+  { value: "korb", label: "Korb" },
+] as const;
+
+export type ArchShapeOption = SelectOptionValue<typeof archShapeOptions>;
+
 export function stripRepeatedPrefix(label: string, prefix: string): string {
   return label.startsWith(prefix) ? label.slice(prefix.length).trim() : label;
 }

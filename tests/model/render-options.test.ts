@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { timberMemberKinds } from "../../src/model/fachwerk-vocabulary";
 import {
+  archShapeOptions,
   corniceDecorOptions,
   floorMaterialOptions,
   gableMaterialOptions,
   gableShapeOptions,
   pentRoofOptions,
+  sideDormerStyleOptions,
   stripRepeatedPrefix,
+  turretRoofOptions,
+  windowGlassOptions,
+  windowMuntinOptions,
+  windowShapeOptions,
+  windowShutterOptions,
 } from "../../src/model/render-options";
 
 function expectUniqueOptionValues(options: readonly { value: string }[]): void {
@@ -22,6 +29,13 @@ describe("render options", () => {
     expectUniqueOptionValues(gableMaterialOptions);
     expectUniqueOptionValues(gableShapeOptions);
     expectUniqueOptionValues(pentRoofOptions);
+    expectUniqueOptionValues(turretRoofOptions);
+    expectUniqueOptionValues(windowShapeOptions);
+    expectUniqueOptionValues(windowMuntinOptions);
+    expectUniqueOptionValues(windowGlassOptions);
+    expectUniqueOptionValues(windowShutterOptions);
+    expectUniqueOptionValues(sideDormerStyleOptions);
+    expectUniqueOptionValues(archShapeOptions);
   });
 
   it("removes only the repeated select prefix", () => {
@@ -34,6 +48,10 @@ describe("render options", () => {
     expect(gableMaterialOptions.map((option) => option.value)).toContain("inherit_floor");
     expect(gableShapeOptions.map((option) => option.value)).toContain("krueppel");
     expect(pentRoofOptions.map((option) => option.value)).toContain("full");
+    expect(turretRoofOptions.map((option) => option.value)).toEqual(["spitz", "flach", "krueppel", "barock"]);
+    expect(windowMuntinOptions.map((option) => option.value)).toContain("t_form");
+    expect(sideDormerStyleOptions.map((option) => option.value)).toContain("fledermaus");
+    expect(archShapeOptions.map((option) => option.value)).toEqual(["rund", "spitz", "korb"]);
   });
 
   it("documents core timber member vocabulary", () => {
