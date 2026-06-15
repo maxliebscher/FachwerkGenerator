@@ -66,6 +66,13 @@ export function bootFachwerkGenerator(): void {
           arches: [], 
           customShapes: [] 
       });
+      const appendSchiffskehlePath = (path, iStartX, iEndX, eStartX, eEndX, currentY, yBottom) => {
+          path.push(
+              {type:'B', cx1: eEndX, cy1: yBottom, cx2: eEndX, cy2: currentY, x: iEndX, y: currentY},
+              {type:'L', x: iStartX, y: currentY},
+              {type:'B', cx1: eStartX, cy1: currentY, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom}
+          );
+      };
       let scene = {
           walls: {...createLayerGroup(), foregroundShapes: []},
           gables: [],
@@ -476,7 +483,6 @@ export function bootFachwerkGenerator(): void {
                                       <option value="konsolen" ${dec==='konsolen'?'selected':''}>Konsolen</option>
                                       <option value="abgetreppt" ${dec==='abgetreppt'?'selected':''}>Abgetreppt</option>
                                       <option value="schiffskehle" ${dec==='schiffskehle'?'selected':''}>Schiffskehle</option>
-                                      <option value="neidkoepfe" ${dec==='neidkoepfe'?'selected':''}>Neidköpfe</option>
                                       <option value="stamm_5eck" ${dec==='stamm_5eck'?'selected':''}>Balkenköpfe (Spitz/Gotisch)</option>
                                       <option value="stamm_spitz" ${dec==='stamm_spitz'?'selected':''}>Balkenköpfe (Massiv/Stumpf)</option>
                                       <option value="stamm_quadrat" ${dec==='stamm_quadrat'?'selected':''}>Balkenköpfe (Robustes Viereck)</option>
@@ -948,6 +954,8 @@ export function bootFachwerkGenerator(): void {
                               bgPath.push({type:'B', cx1: eEndX, cy1: currentY + (yBottom-currentY)*0.5, cx2: iEndX, cy2: currentY + (yBottom-currentY)*0.2, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: iStartX, cy1: currentY + (yBottom-currentY)*0.2, cx2: eStartX, cy2: currentY + (yBottom-currentY)*0.5, x: eStartX, y: yBottom});
                           } else if (decor === 'knaggen') { 
                               bgPath.push({type:'B', cx1: eEndX, cy1: yBottom, cx2: iEndX, cy2: yBottom, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: iStartX, cy1: yBottom, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom});
+                          } else if (decor === 'schiffskehle') {
+                              appendSchiffskehlePath(bgPath, iStartX, iEndX, eStartX, eEndX, currentY, yBottom);
                           } else if (typeof decor !== 'undefined' && decor === 'abgetreppt' || typeof cornice !== 'undefined' && cornice === 'abgetreppt') {
                       let jg = yBottom - currentY;
                       let o = typeof overhang !== 'undefined' ? overhang : rOver;
@@ -1541,7 +1549,7 @@ export function bootFachwerkGenerator(): void {
                       } else if (cornice === 'knaggen') { 
                           bgPath.push({type:'B', cx1: eEndX, cy1: yBottom, cx2: iEndX, cy2: yBottom, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: iStartX, cy1: yBottom, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom});
                       } else if (cornice === 'schiffskehle') {
-                          bgPath.push({type:'B', cx1: eEndX, cy1: currentY, cx2: eEndX, cy2: yBottom, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: eStartX, cy1: currentY, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom});
+                          appendSchiffskehlePath(bgPath, iStartX, iEndX, eStartX, eEndX, currentY, yBottom);
                       } else if (typeof decor !== 'undefined' && decor === 'abgetreppt' || typeof cornice !== 'undefined' && cornice === 'abgetreppt') {
                       let jg = yBottom - currentY;
                       let o = typeof overhang !== 'undefined' ? overhang : rOver;
