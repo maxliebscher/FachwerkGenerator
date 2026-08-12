@@ -136,3 +136,20 @@ export type ArchShapeOption = SelectOptionValue<typeof archShapeOptions>;
 export function stripRepeatedPrefix(label: string, prefix: string): string {
   return label.startsWith(prefix) ? label.slice(prefix.length).trim() : label;
 }
+
+export function renderSelectOptions(options: readonly SelectOption[], selectedValue: string): string {
+  return options
+    .map((option) => {
+      const selected = option.value === selectedValue ? ' selected' : '';
+      return `<option value="${escapeHtmlAttribute(option.value)}"${selected}>${escapeHtmlText(option.label)}</option>`;
+    })
+    .join('\n');
+}
+
+function escapeHtmlAttribute(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function escapeHtmlText(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}

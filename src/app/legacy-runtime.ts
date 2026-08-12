@@ -2,6 +2,9 @@
 /* eslint-disable */
 // Mechanically extracted from Fachwerkgenerator_v0.6.7.8_stable.html.
 // Kept behavior-first for v0.7 parity; smaller render modules can replace this incrementally.
+import { normalizeLegacyState } from '../model/generator-state';
+import { corniceDecorOptions, renderSelectOptions } from '../model/render-options';
+
 export function bootFachwerkGenerator(): void {
   const canvas = document.getElementById('fachwerkCanvas');
       const ctx = canvas.getContext('2d');
@@ -55,6 +58,8 @@ export function bootFachwerkGenerator(): void {
       const btnResetCam = document.getElementById('btnResetCam');
       let camZoom = 1.0; let camPanX = 0; let camPanY = 0;
       const updateVal = (id, val, suffix='') => { document.getElementById(id).innerText = val + suffix; };
+      const renderCorniceOptionHtml = (selected) => renderSelectOptions(corniceDecorOptions, selected || 'none');
+      if (uiCornice) uiCornice.innerHTML = renderCorniceOptionHtml(uiCornice.value || 'none');
       const createLayerGroup = () => ({ 
           bg: [], 
           preShapes: [], 
@@ -478,15 +483,7 @@ export function bootFachwerkGenerator(): void {
                           <div><label class="control-label">Dekor & Füllung</label>
                               <div class="flex gap-1">
                                   <select id="floorDecor-${i}" class="floor-select m-0 flex-1">
-                                      <option value="none" ${dec==='none'?'selected':''}>Streben</option>
-                                      <option value="knaggen" ${dec==='knaggen'?'selected':''}>Vouten-Konsolen</option>
-                                      <option value="konsolen" ${dec==='konsolen'?'selected':''}>Konsolen</option>
-                                      <option value="abgetreppt" ${dec==='abgetreppt'?'selected':''}>Abgetreppt</option>
-                                      <option value="schiffskehle" ${dec==='schiffskehle'?'selected':''}>Schiffskehle</option>
-                                      <option value="stamm_5eck" ${dec==='stamm_5eck'?'selected':''}>Balkenköpfe (Spitz/Gotisch)</option>
-                                      <option value="stamm_spitz" ${dec==='stamm_spitz'?'selected':''}>Balkenköpfe (Massiv/Stumpf)</option>
-                                      <option value="stamm_quadrat" ${dec==='stamm_quadrat'?'selected':''}>Balkenköpfe (Robustes Viereck)</option>
-                                      <option value="stamm_rund" ${dec==='stamm_rund'?'selected':''}>Balkenköpfe (Breit & Abgerundet)</option></select>
+                                      ${renderCorniceOptionHtml(dec)}</select>
                                   <select id="decorFill-${i}" class="floor-select m-0 w-[40px] px-0 text-center" title="Hintergrund">
                                       <option value="filled" ${decFill==='filled'?'selected':''}>Zu</option>
                                       <option value="open" ${decFill==='open'?'selected':''}>Auf</option>
@@ -3045,6 +3042,7 @@ export function bootFachwerkGenerator(): void {
   };
       function loadState(data) {
           if (!data) return;
+          data = normalizeLegacyState(data);
           const setVal = (id, val) => { 
               let el = document.getElementById(id); 
               if(!el) el = document.getElementById(id.replace('ui', 'param'));

@@ -9,6 +9,7 @@ import {
   pentRoofOptions,
   sideDormerStyleOptions,
   stripRepeatedPrefix,
+  renderSelectOptions,
   turretRoofOptions,
   windowGlassOptions,
   windowMuntinOptions,
@@ -41,6 +42,14 @@ describe("render options", () => {
   it("removes only the repeated select prefix", () => {
     expect(stripRepeatedPrefix("Trauf-Gesims: Schiffskehle", "Trauf-Gesims:")).toBe("Schiffskehle");
     expect(stripRepeatedPrefix("Schiffskehle", "Trauf-Gesims:")).toBe("Schiffskehle");
+  });
+
+  it("renders cornice options without disabled experimental values", () => {
+    const html = renderSelectOptions(corniceDecorOptions, "schiffskehle");
+
+    expect(html).toContain('<option value="schiffskehle" selected>Schiffskehle</option>');
+    expect(html).not.toContain("neidkoepfe");
+    expect(html).not.toContain("Neidköpfe");
   });
 
   it("keeps legacy material and roof values available", () => {

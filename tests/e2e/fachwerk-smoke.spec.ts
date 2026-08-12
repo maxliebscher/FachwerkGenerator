@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 test('v0.7 refactor renders and supports the main generator workflow', async ({ page }, testInfo) => {
   const consoleMessages: string[] = [];
@@ -15,6 +15,33 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   await expect(page.locator('#paramRows')).toHaveValue('2');
 
   await expect.poll(() => canvasHasVisiblePixels(page), { timeout: 10_000 }).toBeTruthy();
+
+  await expect(page.locator('#paramCornice option')).not.toContainText(['Neidköpfe']);
+  await expect(page.locator('#floorDecor-1 option')).not.toContainText(['Neidköpfe']);
+  await page.locator('#paramCornice').selectOption('schiffskehle');
+  await expect(page.locator('#paramCornice')).toHaveValue('schiffskehle');
+  await page.locator('#floorDecor-1').selectOption('schiffskehle');
+  await expect(page.locator('#floorDecor-1')).toHaveValue('schiffskehle');
+
+  const legacyImportPath = testInfo.outputPath('legacy-disabled-neidkoepfe.json');
+  await writeFile(
+    legacyImportPath,
+    JSON.stringify({
+      rows: '2',
+      cols: '4',
+      thick: '6',
+      cornice: 'neidkoepfe',
+      floors: [
+        { style: 'skelett', material: 'plaster', height: '1.9', overhang: '0', decor: 'none', arches: '4' },
+        { style: 'skelett', material: 'plaster', height: '1.7', overhang: '12', decor: 'neidkoepfe', arches: '4' }
+      ],
+      gables: []
+    }),
+    'utf8'
+  );
+  await page.locator('#btnImport').setInputFiles(legacyImportPath);
+  await expect(page.locator('#paramCornice')).toHaveValue('none');
+  await expect(page.locator('#floorDecor-1')).toHaveValue('none');
 
   await page.locator('#paramRows').fill('5');
   await expect(page.locator('#rowsVal')).toHaveText('5');

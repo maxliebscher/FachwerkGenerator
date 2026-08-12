@@ -39,4 +39,73 @@ describe('generator state compatibility', () => {
       panY: -20
     });
   });
+
+  it('normalizes exported runtime fields with safe defaults', () => {
+    const state = normalizeLegacyState({
+      timberPreset: undefined,
+      plasterColor: undefined,
+      sockel: undefined,
+      sockelStyle: undefined,
+      hasGable: undefined,
+      gableCount: undefined,
+      cornice: undefined,
+      dormShape: undefined,
+      winStyle: undefined,
+      winSprossen: undefined
+    });
+
+    expect(state).toMatchObject({
+      timberPreset: 'custom',
+      plasterColor: '#fdfbf7',
+      sockel: true,
+      sockelStyle: 'stein_gerade',
+      hasGable: true,
+      gableCount: '1',
+      cornice: 'none',
+      dormShape: 'halbwalm',
+      winStyle: 'quadrat',
+      winSprossen: 'keine'
+    });
+  });
+
+  it('maps disabled decorative values to selectable fallbacks on import', () => {
+    const state = normalizeLegacyState({
+      cornice: 'neidkoepfe',
+      floors: [
+        { style: 'skelett', material: 'plaster', height: '1.7', overhang: '12', decor: 'neidkoepfe', arches: '4' }
+      ]
+    });
+
+    expect(state.cornice).toBe('none');
+    expect(state.floors?.[0]?.decor).toBe('none');
+  });
+
+  it('preserves floor and gable state shape across legacy aliases', () => {
+    const state = normalizeLegacyState({
+      floors: [
+        { style: undefined as unknown as string, material: 'stone', height: 1.8 as unknown as string, overhang: 22 as unknown as string }
+      ],
+      gables: [
+        { shape: 'krueppel', mat: 'inherit_floor', style: 'leer', pitch: 1.4 as unknown as string, steps: 6 as unknown as string, stepHeight: 0.8 as unknown as string, tiers: 2 as unknown as string }
+      ]
+    });
+
+    expect(state.floors?.[0]).toMatchObject({
+      style: 'skelett',
+      material: 'stone',
+      height: '1.8',
+      overhang: '22',
+      decor: 'none',
+      arches: '4'
+    });
+    expect(state.gables?.[0]).toMatchObject({
+      shape: 'krueppel',
+      mat: 'inherit_floor',
+      style: 'leer',
+      pitch: '1.4',
+      steps: '6',
+      stepHeight: '0.8',
+      tiers: '2'
+    });
+  });
 });
