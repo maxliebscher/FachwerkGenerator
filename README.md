@@ -3,7 +3,7 @@
 [![Website](https://img.shields.io/badge/Website-fachwerkgenerator.de-blue)](https://fachwerkgenerator.de)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-> 🇬🇧 **Note for English speakers:** **[Fachwerkgenerator.de](https://fachwerkgenerator.de)**  is a browser-based, open-source tool for the visual design, exploration, and conceptualization of harmonious timber-framed structures. It is part of the architectural aesthetics project FassadenSchmied. The interface and documentation of this tool are currently in German. Since it's a lightweight HTML application, it is recommended to use the browser's built-in translation feature (e.g., in Chrome or Edge) to translate the tool on the fly.
+> 🇬🇧 **English version:** The generator includes a carefully translated English interface at **[fachwerkgenerator.de/en/](https://fachwerkgenerator.de/en/)**. The language can also be changed directly in the toolbar.
 
 
 **[Fachwerkgenerator.de](https://fachwerkgenerator.de)** ist ein browserbasiertes Open-Source-Tool zur visuellen Gestaltung, Erforschung und Konzeption harmonischer Fachwerk-Strukturen. Es ist Teil des Architektur-Ästhetik-Projekts **FassadenSchmied**.
@@ -39,13 +39,13 @@ Dieses Modul dient **ausschließlich der visuellen Gestaltung und Konzeptentwick
 * Generierte Entwürfe sind visuelle Ideen, keine Baupläne.
 * Es gibt keine Garantie für die durchweg korrekte Verwendung historischer architektonischer Fachbegriffe (z.B. "Wilder Mann", "Knaggen").
 
-### 🚀 Nutzung & Lokale Installation
-Da das Tool aus reinen HTML-Dateien besteht, ist keine Installation notwendig:
+### 🚀 Nutzung & Lokale Entwicklung
 1. Die aktuellste, vollumfängliche Version ist direkt im Browser nutzbar unter: **[fachwerkgenerator.de](https://fachwerkgenerator.de)**
 2. Für den Einstieg stehen reduzierte Basis-Versionen zur Verfügung:
    * [Demo 1: Minimal-Modul](https://fachwerkgenerator.de/demo-1.html)
    * [Demo 2: Erweitertes Basis-Modul](https://fachwerkgenerator.de/demo-2.html)
-3. Für die Offline-Nutzung können die HTML-Dateien unter [Releases](https://github.com/maxliebscher/FachwerkGenerator/releases) heruntergeladen und per Doppelklick im Webbrowser geöffnet werden.
+3. Für die lokale Entwicklung: `npm install`, danach `npm run dev`.
+4. `npm run build` erzeugt die statisch hostbare Website in `dist/`. Wegen der gebündelten JavaScript-Module muss sie über einen Webserver ausgeliefert werden; das direkte Öffnen der Quell-`index.html` per Doppelklick wird nicht unterstützt.
 
 ### 🤝 Ergebnisse teilen
 Erstellte Entwürfe oder daraus resultierende KI-Architektur-Renderings können gerne auf Social Media geteilt werden.

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
-test('v0.7 refactor renders and supports the main generator workflow', async ({ page }, testInfo) => {
+test('v0.8 renders and supports the main generator workflow', async ({ page }, testInfo) => {
   const consoleMessages: string[] = [];
   page.on('console', (message) => {
     if (['error', 'warning'].includes(message.type())) {
@@ -10,11 +10,40 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   });
 
   await page.goto('/');
-  await expect(page).toHaveTitle(/v0\.7_refactor/);
+  await expect(page).toHaveTitle(/v0\.8/);
+  await expect(page.locator('.header-brand-chip')).toContainText(/(?:Fachwerk-|Timber-Frame )Generator v0\.8/);
+  await expect(page.locator('header')).not.toContainText('Long live the timber');
   await expect(page.locator('#fachwerkCanvas')).toBeVisible();
   await expect(page.locator('#paramRows')).toHaveValue('2');
 
   await expect.poll(() => canvasHasVisiblePixels(page), { timeout: 10_000 }).toBeTruthy();
+
+  await expect(page.locator('#paramCornice option')).not.toContainText(['Neidköpfe']);
+  await expect(page.locator('#floorDecor-1 option')).not.toContainText(['Neidköpfe']);
+  await page.locator('#paramCornice').selectOption('schiffskehle');
+  await expect(page.locator('#paramCornice')).toHaveValue('schiffskehle');
+  await page.locator('#floorDecor-1').selectOption('schiffskehle');
+  await expect(page.locator('#floorDecor-1')).toHaveValue('schiffskehle');
+
+  const legacyImportPath = testInfo.outputPath('legacy-disabled-neidkoepfe.json');
+  await writeFile(
+    legacyImportPath,
+    JSON.stringify({
+      rows: '2',
+      cols: '4',
+      thick: '6',
+      cornice: 'neidkoepfe',
+      floors: [
+        { style: 'skelett', material: 'plaster', height: '1.9', overhang: '0', decor: 'none', arches: '4' },
+        { style: 'skelett', material: 'plaster', height: '1.7', overhang: '12', decor: 'neidkoepfe', arches: '4' }
+      ],
+      gables: []
+    }),
+    'utf8'
+  );
+  await page.locator('#btnImport').setInputFiles(legacyImportPath);
+  await expect(page.locator('#paramCornice')).toHaveValue('none');
+  await expect(page.locator('#floorDecor-1')).toHaveValue('none');
 
   await page.locator('#paramRows').fill('5');
   await expect(page.locator('#rowsVal')).toHaveText('5');
@@ -49,6 +78,7 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   await download.saveAs(exportPath);
 
   const exported = JSON.parse(await readFile(exportPath, 'utf8'));
+  expect(exported.version).toBe('0.8.0');
   expect(exported.rows).toBe('5');
   expect(exported.cols).toBe('12');
   expect(exported.thick).toBe('10');
@@ -60,6 +90,15 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   await page.locator('#btnImport').setInputFiles(exportPath);
   await expect(page.locator('#paramRows')).toHaveValue('5');
   await expect(page.locator('#paramCols')).toHaveValue('12');
+
+  const pngDownloadPromise = page.waitForEvent('download');
+  await page.locator('#btnExportImg').click();
+  const pngDownload = await pngDownloadPromise;
+  const pngPath = testInfo.outputPath('fachwerk-export.png');
+  await pngDownload.saveAs(pngPath);
+  const pngBytes = await readFile(pngPath);
+  expect(Array.from(pngBytes.subarray(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  expect(pngBytes.length).toBeGreaterThan(1_000);
 
   await expect.poll(() => canvasHasVisiblePixels(page), { timeout: 10_000 }).toBeTruthy();
   expect(consoleMessages.filter((entry) =>

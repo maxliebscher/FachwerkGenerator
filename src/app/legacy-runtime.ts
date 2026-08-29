@@ -2,6 +2,10 @@
 /* eslint-disable */
 // Mechanically extracted from Fachwerkgenerator_v0.6.7.8_stable.html.
 // Kept behavior-first for v0.7 parity; smaller render modules can replace this incrementally.
+import { normalizeLegacyState } from '../model/generator-state';
+import { corniceDecorOptions, renderSelectOptions } from '../model/render-options';
+import { getCurrentLanguage, translateSourceText } from '../i18n/i18n';
+
 export function bootFachwerkGenerator(): void {
   const canvas = document.getElementById('fachwerkCanvas');
       const ctx = canvas.getContext('2d');
@@ -55,6 +59,8 @@ export function bootFachwerkGenerator(): void {
       const btnResetCam = document.getElementById('btnResetCam');
       let camZoom = 1.0; let camPanX = 0; let camPanY = 0;
       const updateVal = (id, val, suffix='') => { document.getElementById(id).innerText = val + suffix; };
+      const renderCorniceOptionHtml = (selected) => renderSelectOptions(corniceDecorOptions, selected || 'none');
+      if (uiCornice) uiCornice.innerHTML = renderCorniceOptionHtml(uiCornice.value || 'none');
       const createLayerGroup = () => ({ 
           bg: [], 
           preShapes: [], 
@@ -66,6 +72,13 @@ export function bootFachwerkGenerator(): void {
           arches: [], 
           customShapes: [] 
       });
+      const appendSchiffskehlePath = (path, iStartX, iEndX, eStartX, eEndX, currentY, yBottom) => {
+          path.push(
+              {type:'B', cx1: eEndX, cy1: yBottom, cx2: eEndX, cy2: currentY, x: iEndX, y: currentY},
+              {type:'L', x: iStartX, y: currentY},
+              {type:'B', cx1: eStartX, cy1: currentY, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom}
+          );
+      };
       let scene = {
           walls: {...createLayerGroup(), foregroundShapes: []},
           gables: [],
@@ -351,7 +364,7 @@ export function bootFachwerkGenerator(): void {
           const getVal = (id, def) => document.getElementById(id) ? document.getElementById(id).value : def;
           const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
           return JSON.stringify({
-              version: "0.6.4.7", rows: uiRows.value, cols: uiCols.value, thick: uiThick.value, 
+              version: "0.8.0", rows: uiRows.value, cols: uiCols.value, thick: uiThick.value,
               sockel: uiSockel.checked, sockelH: uiSockelH.value, sockelStyle: getVal('paramSockelStyle', 'stein_gerade'), 
               sockelQuader: getVal('paramSockelQuader', 'none'), ruine: getVal('paramRuine', 'none'),
               doorType: uiDoorType.value, doorFrame: uiDoorFrame.value, doorPos: uiDoorPos.value, 
@@ -398,7 +411,7 @@ export function bootFachwerkGenerator(): void {
               try {
                   const config = JSON.parse(e.target.result);
                   loadState(config);
-              } catch(err) { alert("Fehler beim Laden!"); console.error(err); }
+              } catch(err) { alert(translateSourceText("Fehler beim Laden!")); console.error(err); }
           };
           reader.readAsText(file); e.target.value = '';
       });
@@ -471,16 +484,7 @@ export function bootFachwerkGenerator(): void {
                           <div><label class="control-label">Dekor & Füllung</label>
                               <div class="flex gap-1">
                                   <select id="floorDecor-${i}" class="floor-select m-0 flex-1">
-                                      <option value="none" ${dec==='none'?'selected':''}>Streben</option>
-                                      <option value="knaggen" ${dec==='knaggen'?'selected':''}>Vouten-Konsolen</option>
-                                      <option value="konsolen" ${dec==='konsolen'?'selected':''}>Konsolen</option>
-                                      <option value="abgetreppt" ${dec==='abgetreppt'?'selected':''}>Abgetreppt</option>
-                                      <option value="schiffskehle" ${dec==='schiffskehle'?'selected':''}>Schiffskehle</option>
-                                      <option value="neidkoepfe" ${dec==='neidkoepfe'?'selected':''}>Neidköpfe</option>
-                                      <option value="stamm_5eck" ${dec==='stamm_5eck'?'selected':''}>Balkenköpfe (Spitz/Gotisch)</option>
-                                      <option value="stamm_spitz" ${dec==='stamm_spitz'?'selected':''}>Balkenköpfe (Massiv/Stumpf)</option>
-                                      <option value="stamm_quadrat" ${dec==='stamm_quadrat'?'selected':''}>Balkenköpfe (Robustes Viereck)</option>
-                                      <option value="stamm_rund" ${dec==='stamm_rund'?'selected':''}>Balkenköpfe (Breit & Abgerundet)</option></select>
+                                      ${renderCorniceOptionHtml(dec)}</select>
                                   <select id="decorFill-${i}" class="floor-select m-0 w-[40px] px-0 text-center" title="Hintergrund">
                                       <option value="filled" ${decFill==='filled'?'selected':''}>Zu</option>
                                       <option value="open" ${decFill==='open'?'selected':''}>Auf</option>
@@ -948,6 +952,8 @@ export function bootFachwerkGenerator(): void {
                               bgPath.push({type:'B', cx1: eEndX, cy1: currentY + (yBottom-currentY)*0.5, cx2: iEndX, cy2: currentY + (yBottom-currentY)*0.2, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: iStartX, cy1: currentY + (yBottom-currentY)*0.2, cx2: eStartX, cy2: currentY + (yBottom-currentY)*0.5, x: eStartX, y: yBottom});
                           } else if (decor === 'knaggen') { 
                               bgPath.push({type:'B', cx1: eEndX, cy1: yBottom, cx2: iEndX, cy2: yBottom, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: iStartX, cy1: yBottom, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom});
+                          } else if (decor === 'schiffskehle') {
+                              appendSchiffskehlePath(bgPath, iStartX, iEndX, eStartX, eEndX, currentY, yBottom);
                           } else if (typeof decor !== 'undefined' && decor === 'abgetreppt' || typeof cornice !== 'undefined' && cornice === 'abgetreppt') {
                       let jg = yBottom - currentY;
                       let o = typeof overhang !== 'undefined' ? overhang : rOver;
@@ -1541,7 +1547,7 @@ export function bootFachwerkGenerator(): void {
                       } else if (cornice === 'knaggen') { 
                           bgPath.push({type:'B', cx1: eEndX, cy1: yBottom, cx2: iEndX, cy2: yBottom, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: iStartX, cy1: yBottom, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom});
                       } else if (cornice === 'schiffskehle') {
-                          bgPath.push({type:'B', cx1: eEndX, cy1: currentY, cx2: eEndX, cy2: yBottom, x: iEndX, y: currentY}, {type:'L', x: iStartX, y: currentY}, {type:'B', cx1: eStartX, cy1: currentY, cx2: eStartX, cy2: yBottom, x: eStartX, y: yBottom});
+                          appendSchiffskehlePath(bgPath, iStartX, iEndX, eStartX, eEndX, currentY, yBottom);
                       } else if (typeof decor !== 'undefined' && decor === 'abgetreppt' || typeof cornice !== 'undefined' && cornice === 'abgetreppt') {
                       let jg = yBottom - currentY;
                       let o = typeof overhang !== 'undefined' ? overhang : rOver;
@@ -2766,7 +2772,10 @@ export function bootFachwerkGenerator(): void {
           if (!btn) return; 
           let idx = parseInt(btn.getAttribute('data-delete-idx'));
           let name = idx === 0 ? "das Erdgeschoss" : `das ${idx}. OG`;
-          if (confirm(`Möchtest du ${name} wirklich löschen?`)) {
+          const deletePrompt = getCurrentLanguage() === 'en'
+              ? `Delete ${idx === 0 ? 'the ground floor' : `upper storey ${idx}`}?`
+              : `Möchtest du ${name} wirklich löschen?`;
+          if (confirm(deletePrompt)) {
               initFloorControls(true); 
               savedFloorStates.splice(idx, 1); 
               uiRows.value = parseInt(uiRows.value) - 1; 
@@ -2922,13 +2931,13 @@ export function bootFachwerkGenerator(): void {
           const isReload = (e.key === 'F5') || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r');
           if (!isReload) return;
           e.preventDefault();
-          if (confirm("Achtung: Beim Neuladen wird dein aktuelles Fachwerkhaus restlos gelöscht.\n\nHast du deinen Entwurf als JSON exportiert?\n\nTrotzdem neu laden?")) {
+          if (confirm(translateSourceText("Achtung: Beim Neuladen wird dein aktuelles Fachwerkhaus restlos gelöscht.\n\nHast du deinen Entwurf als JSON exportiert?\n\nTrotzdem neu laden?"))) {
               allowReload = true; 
               location.reload();
           }
       });
   const BASE_HOUSE_CONFIG = {
-    "version": "0.6.4.7",
+    "version": "0.8.0",
     "rows": "2",
     "cols": "4",
     "thick": "6",
@@ -3037,6 +3046,7 @@ export function bootFachwerkGenerator(): void {
   };
       function loadState(data) {
           if (!data) return;
+          data = normalizeLegacyState(data);
           const setVal = (id, val) => { 
               let el = document.getElementById(id); 
               if(!el) el = document.getElementById(id.replace('ui', 'param'));
