@@ -11,6 +11,7 @@ describe('generator state compatibility', () => {
     const state = normalizeLegacyState({ rows: 3 as unknown as string, cols: '8', thick: undefined });
 
     expect(state.rows).toBe('3');
+    expect(state.version).toBe('0.8.0');
     expect(state.cols).toBe('8');
     expect(state.thick).toBe('7');
     expect(state.globalDecor).toBe('0');

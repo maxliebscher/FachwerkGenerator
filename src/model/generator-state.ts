@@ -122,7 +122,7 @@ export function normalizeLegacyState(input: LegacyGeneratorStateInput | null | u
   const state = input ?? {};
   return {
     ...state,
-    version: typeof state.version === 'string' ? state.version : '0.7.0-refactor',
+    version: typeof state.version === 'string' ? state.version : '0.8.0',
     rows: String(state.rows ?? '4'),
     cols: String(state.cols ?? '10'),
     thick: String(state.thick ?? '7'),

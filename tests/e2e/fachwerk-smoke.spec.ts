@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 
-test('v0.7 refactor renders and supports the main generator workflow', async ({ page }, testInfo) => {
+test('v0.8 renders and supports the main generator workflow', async ({ page }, testInfo) => {
   const consoleMessages: string[] = [];
   page.on('console', (message) => {
     if (['error', 'warning'].includes(message.type())) {
@@ -10,7 +10,9 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   });
 
   await page.goto('/');
-  await expect(page).toHaveTitle(/v0\.7_refactor/);
+  await expect(page).toHaveTitle(/v0\.8/);
+  await expect(page.locator('.header-brand-chip')).toContainText(/(?:Fachwerk-|Timber-Frame )Generator v0\.8/);
+  await expect(page.locator('header')).not.toContainText('Long live the timber');
   await expect(page.locator('#fachwerkCanvas')).toBeVisible();
   await expect(page.locator('#paramRows')).toHaveValue('2');
 
@@ -76,6 +78,7 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   await download.saveAs(exportPath);
 
   const exported = JSON.parse(await readFile(exportPath, 'utf8'));
+  expect(exported.version).toBe('0.8.0');
   expect(exported.rows).toBe('5');
   expect(exported.cols).toBe('12');
   expect(exported.thick).toBe('10');
@@ -87,6 +90,15 @@ test('v0.7 refactor renders and supports the main generator workflow', async ({ 
   await page.locator('#btnImport').setInputFiles(exportPath);
   await expect(page.locator('#paramRows')).toHaveValue('5');
   await expect(page.locator('#paramCols')).toHaveValue('12');
+
+  const pngDownloadPromise = page.waitForEvent('download');
+  await page.locator('#btnExportImg').click();
+  const pngDownload = await pngDownloadPromise;
+  const pngPath = testInfo.outputPath('fachwerk-export.png');
+  await pngDownload.saveAs(pngPath);
+  const pngBytes = await readFile(pngPath);
+  expect(Array.from(pngBytes.subarray(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  expect(pngBytes.length).toBeGreaterThan(1_000);
 
   await expect.poll(() => canvasHasVisiblePixels(page), { timeout: 10_000 }).toBeTruthy();
   expect(consoleMessages.filter((entry) =>

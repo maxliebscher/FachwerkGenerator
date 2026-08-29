@@ -4,6 +4,7 @@
 // Kept behavior-first for v0.7 parity; smaller render modules can replace this incrementally.
 import { normalizeLegacyState } from '../model/generator-state';
 import { corniceDecorOptions, renderSelectOptions } from '../model/render-options';
+import { getCurrentLanguage, translateSourceText } from '../i18n/i18n';
 
 export function bootFachwerkGenerator(): void {
   const canvas = document.getElementById('fachwerkCanvas');
@@ -363,7 +364,7 @@ export function bootFachwerkGenerator(): void {
           const getVal = (id, def) => document.getElementById(id) ? document.getElementById(id).value : def;
           const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
           return JSON.stringify({
-              version: "0.6.4.7", rows: uiRows.value, cols: uiCols.value, thick: uiThick.value, 
+              version: "0.8.0", rows: uiRows.value, cols: uiCols.value, thick: uiThick.value,
               sockel: uiSockel.checked, sockelH: uiSockelH.value, sockelStyle: getVal('paramSockelStyle', 'stein_gerade'), 
               sockelQuader: getVal('paramSockelQuader', 'none'), ruine: getVal('paramRuine', 'none'),
               doorType: uiDoorType.value, doorFrame: uiDoorFrame.value, doorPos: uiDoorPos.value, 
@@ -410,7 +411,7 @@ export function bootFachwerkGenerator(): void {
               try {
                   const config = JSON.parse(e.target.result);
                   loadState(config);
-              } catch(err) { alert("Fehler beim Laden!"); console.error(err); }
+              } catch(err) { alert(translateSourceText("Fehler beim Laden!")); console.error(err); }
           };
           reader.readAsText(file); e.target.value = '';
       });
@@ -2771,7 +2772,10 @@ export function bootFachwerkGenerator(): void {
           if (!btn) return; 
           let idx = parseInt(btn.getAttribute('data-delete-idx'));
           let name = idx === 0 ? "das Erdgeschoss" : `das ${idx}. OG`;
-          if (confirm(`Möchtest du ${name} wirklich löschen?`)) {
+          const deletePrompt = getCurrentLanguage() === 'en'
+              ? `Delete ${idx === 0 ? 'the ground floor' : `upper storey ${idx}`}?`
+              : `Möchtest du ${name} wirklich löschen?`;
+          if (confirm(deletePrompt)) {
               initFloorControls(true); 
               savedFloorStates.splice(idx, 1); 
               uiRows.value = parseInt(uiRows.value) - 1; 
@@ -2927,13 +2931,13 @@ export function bootFachwerkGenerator(): void {
           const isReload = (e.key === 'F5') || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r');
           if (!isReload) return;
           e.preventDefault();
-          if (confirm("Achtung: Beim Neuladen wird dein aktuelles Fachwerkhaus restlos gelöscht.\n\nHast du deinen Entwurf als JSON exportiert?\n\nTrotzdem neu laden?")) {
+          if (confirm(translateSourceText("Achtung: Beim Neuladen wird dein aktuelles Fachwerkhaus restlos gelöscht.\n\nHast du deinen Entwurf als JSON exportiert?\n\nTrotzdem neu laden?"))) {
               allowReload = true; 
               location.reload();
           }
       });
   const BASE_HOUSE_CONFIG = {
-    "version": "0.6.4.7",
+    "version": "0.8.0",
     "rows": "2",
     "cols": "4",
     "thick": "6",

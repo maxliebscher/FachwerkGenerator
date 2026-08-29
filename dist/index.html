@@ -3,24 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Konfiguriere Fachwerkfassaden direkt im Browser und exportiere das Ergebnis als PNG oder JSON.">
+    <meta property="og:title" content="Fachwerk-Generator">
+    <meta property="og:description" content="Konfiguriere Fachwerkfassaden direkt im Browser und exportiere das Ergebnis als PNG oder JSON.">
+    <meta property="og:url" content="https://fachwerkgenerator.de/">
     <meta property="og:image" content="https://fachwerkgenerator.de/preview.jpg">
-    <title>Max Liebschers' FassadenSchmied: Fachwerk-Generator v0.7_refactor</title>
+    <meta name="twitter:card" content="summary_large_image">
+    <title>Max Liebschers' FassadenSchmied: Fachwerk-Generator v0.8</title>
     <link rel="canonical" href="https://fachwerkgenerator.de/" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script src="https://cdn.tailwindcss.com"></script>
-  <script type="module" crossorigin src="./assets/index-CHrw2BuA.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CwgheUfi.css">
+    <link rel="alternate" hreflang="de" href="https://fachwerkgenerator.de/">
+    <link rel="alternate" hreflang="en" href="https://fachwerkgenerator.de/en/">
+    <link rel="alternate" hreflang="x-default" href="https://fachwerkgenerator.de/">
+  <script type="module" crossorigin src="./assets/index-CE-eKmwv.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-G8Fv4rPI.css">
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
-    <header class="bg-slate-900 text-slate-100 shadow py-2 px-4 flex justify-between items-center border-b-[3px] border-emerald-500 z-20 flex-shrink-0 flex-wrap gap-2">
-        <div class="flex items-center gap-3">
-            <div>
-                <h1 class="text-lg font-bold tracking-tight">Max Liebschers' FassadenSchmied: Fachwerk-Generator</h1>
-                <p class="text-[15px] text-slate-400">V0.7_refactor "Hagel & Mansarden"</p>
+    <header class="app-header bg-slate-900 text-slate-100 shadow py-2 px-4 border-b-[3px] border-emerald-500 z-20 flex-shrink-0">
+        <div class="header-brand min-w-0">
+            <div class="header-brand-chip">
+                <h1>Max Liebschers' FassadenSchmied: Fachwerk-Generator v0.8</h1>
+            </div>
+            <div id="languageSwitcher" class="language-switcher" role="group" aria-label="Sprache">
+                <span class="language-switcher-icon" aria-hidden="true">🌐</span>
+                <button type="button" data-language="de" aria-label="Deutsch" aria-pressed="true">DE</button>
+                <button type="button" data-language="en" aria-label="English" aria-pressed="false">EN</button>
             </div>
         </div>
-        <div class="flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700 flex-wrap">
+        <div class="header-camera flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700">
             <label class="text-[14px] text-slate-300 ml-1" title="Zoom">🔍</label>
             <input type="range" id="camZoomSlider" min="0.1" max="5" step="0.05" value="1" class="w-16">
             <div class="w-px h-4 bg-slate-600 hidden sm:block"></div>
@@ -30,7 +39,7 @@
             <input type="range" id="camPanYSlider" min="-1000" max="1000" step="5" value="0" class="w-16">
             <button id="btnResetCam" class="text-[10px] bg-slate-600 hover:bg-slate-500 text-white px-1.5 py-0.5 rounded transition-colors ml-1">Reset</button>
         </div>
-        <div class="flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700">
+        <div class="header-palette flex items-center gap-2 bg-slate-800 p-1 rounded border border-slate-700">
             <select id="colorPreset" class="bg-slate-700 text-white border border-slate-500 text-[12px] rounded px-1.5 py-0.5 font-bold cursor-pointer outline-none">
                 <option value="default">🎨 Holz: Braun</option>
                 <option value="yellow">🎨 Holz: Gelb</option>
@@ -43,39 +52,39 @@
             </select>
             <input type="color" id="customTimber" value="#1e404f" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent hidden">
             <div class="w-px h-4 bg-slate-600"></div>
-            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
-                Putz 1: <input type="color" id="customPlaster" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Putz 1">
+                <span class="header-palette-label">Putz 1:</span> <input type="color" id="customPlaster" value="#fdfbf7" aria-label="Putz 1" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
             <div class="w-px h-4 bg-slate-600"></div>
             <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Zweite Putzfarbe für Etagen">
-                Putz 2: <input type="color" id="customPlaster2" value="#e2d5c3" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+                <span class="header-palette-label">Putz 2:</span> <input type="color" id="customPlaster2" value="#e2d5c3" aria-label="Putz 2" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
             <div class="w-px h-4 bg-slate-600"></div>
-            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
-                Stein: <input type="color" id="customStone" value="#94a3b8" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Stein">
+                <span class="header-palette-label">Stein:</span> <input type="color" id="customStone" value="#94a3b8" aria-label="Stein" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
             <div class="w-px h-4 bg-slate-600"></div>
-            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
-                Giebel: <input type="color" id="customGable" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Giebel">
+                <span class="header-palette-label">Giebel:</span> <input type="color" id="customGable" value="#fdfbf7" aria-label="Giebel" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
             <div class="w-px h-4 bg-slate-600"></div>
-            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
-                Turm: <input type="color" id="customTurret" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Turm">
+                <span class="header-palette-label">Turm:</span> <input type="color" id="customTurret" value="#fdfbf7" aria-label="Turm" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
             <div class="w-px h-4 bg-slate-600"></div>
-            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
-                Zwerchh.: <input type="color" id="customDormer" value="#fdfbf7" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Zwerchhaus">
+                <span class="header-palette-label">Zwerchh.:</span> <input type="color" id="customDormer" value="#fdfbf7" aria-label="Zwerchhaus" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
             <div class="w-px h-4 bg-slate-600"></div>
-            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1">
-                Dach: <input type="color" id="customTurretRoof" value="#475569" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
+            <label class="text-[12px] font-bold text-slate-200 cursor-pointer flex items-center gap-1" title="Dach">
+                <span class="header-palette-label">Dach:</span> <input type="color" id="customTurretRoof" value="#475569" aria-label="Dach" class="h-6 w-6 p-0 border-0 rounded cursor-pointer bg-transparent">
             </label>
         </div>
-        <div class="flex gap-2">
-            <button id="btnExportImg" class="bg-blue-600 hover:bg-blue-500 text-xs rounded px-2 py-1 font-bold text-white transition-colors">🖼️ Bild speichern</button>
-            <button id="btnExport" class="bg-emerald-600 hover:bg-emerald-500 text-xs rounded px-2 py-1 font-bold text-white transition-colors">↓ Export</button>
-            <label class="bg-amber-600 hover:bg-amber-500 text-xs rounded px-2 py-1 font-bold text-white cursor-pointer transition-colors">
-                ↑ Import <input type="file" id="btnImport" accept=".json" class="hidden">
+        <div class="header-actions flex gap-2">
+            <button id="btnExportImg" aria-label="Bild speichern" title="Bild speichern" class="bg-blue-600 hover:bg-blue-500 text-xs rounded px-2 py-1 font-bold text-white transition-colors">🖼️ <span class="header-action-label">Bild speichern</span></button>
+            <button id="btnExport" aria-label="Export" title="Export" class="bg-emerald-600 hover:bg-emerald-500 text-xs rounded px-2 py-1 font-bold text-white transition-colors">↓ <span class="header-action-label">Export</span></button>
+            <label aria-label="Import" title="Import" class="bg-amber-600 hover:bg-amber-500 text-xs rounded px-2 py-1 font-bold text-white cursor-pointer transition-colors">
+                ↑ <span class="header-action-label">Import</span> <input type="file" id="btnImport" accept=".json" aria-label="Import" class="hidden">
             </label>
         </div>
     </header>
@@ -453,14 +462,14 @@
 <button id="btnOpenInfo" class="fixed bottom-5 right-5 w-12 h-12 bg-slate-800 text-white rounded-full shadow-lg border-2 border-slate-600 flex items-center justify-center font-serif italic text-2xl hover:bg-slate-700 hover:scale-110 transition-transform z-40" title="Projekt Info">
         i
     </button>
-    <div id="infoModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 backdrop-blur-sm opacity-0 transition-opacity duration-300 overflow-y-auto">
+    <div id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-50 backdrop-blur-sm opacity-0 transition-opacity duration-300 overflow-y-auto">
         <div id="infoModalContent" class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8 m-4 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">FassadenSchmied</h2>
+                    <h2 id="infoModalTitle" class="text-3xl font-bold text-slate-800 tracking-tight">FassadenSchmied</h2>
                     <p class="text-slate-500 font-medium italic mt-1">Fachwerk-Generator / <a href="https://fachwerkgenerator.de" target="_blank" class="hover:underline text-blue-600">fachwerkgenerator.de</a></p>
                 </div>
-                <button id="btnCloseInfo" class="text-slate-400 hover:text-slate-700 p-2 transition-colors bg-slate-100 hover:bg-slate-200 rounded-full">
+                <button id="btnCloseInfo" aria-label="Projektinformation schließen" class="text-slate-400 hover:text-slate-700 p-2 transition-colors bg-slate-100 hover:bg-slate-200 rounded-full">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -490,7 +499,7 @@
                 </div>
                 <div class="bg-amber-50 text-amber-800 p-4 rounded-lg border border-amber-300 text-sm shadow-sm">
                     <strong>⚠️ Wichtiger Hinweis & Haftungsausschluss:</strong><br>
-                    Dieses Tool dient <em>ausschließlich</em> der visuellen Gestaltung. Es ersetzt <strong>keine</strong> statische oder bauplanerische Prüfung. Die generierten Vorschläge sind reine Entwurfsideen, keine Baupläne! Es gibt keine Garantie für technische Funktionalität oder die korrekte Verwendung architektonischer Fachbegriffe. Es besteht <strong>kein Anspruch auf Support</strong>.
+                    Dieses Tool dient <em>ausschließlich</em> der visuellen Gestaltung. Es ersetzt <strong data-i18n-key="disclaimer.any">keine</strong> statische oder bauplanerische Prüfung. Die generierten Vorschläge sind reine Entwurfsideen, keine Baupläne! Es gibt keine Garantie für technische Funktionalität oder die korrekte Verwendung architektonischer Fachbegriffe. Es besteht <strong>kein Anspruch auf Support</strong>.
                 </div>
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm">
                     <h4 class="font-bold text-slate-800 mb-1">Feedback & Kooperation</h4>
