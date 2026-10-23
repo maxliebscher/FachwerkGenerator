@@ -52,5 +52,11 @@ Erstellte Entwürfe oder daraus resultierende KI-Architektur-Renderings können 
 Zugehörige Hashtags: **#fassadenschmied** und **#fachwerkgenerator** (Mention: **@fassadenschmied**).
 
 ### 📄 Lizenz & Namensnennung
-Dieses Projekt steht unter der **MIT Lizenz** und ist frei verwendbar, auch für Weiterentwicklungen (Forks). 
-**Einzige Bedingung:** Bei Nutzung, Veröffentlichung von generierten Bildern in offiziellem Kontext oder Weiterentwicklung des Codes ist eine Namensnennung zwingend erforderlich (z. B. *"Erstellt mit dem Fachwerk-Generator von Maximilian Georg Liebscher / FassadenSchmied"*). Details siehe `LICENSE`.
+
+**Software (verbindliche MIT-Bedingungen):** Der FachwerkGenerator steht unter der [MIT-Lizenz](LICENSE). Sie erlaubt die Nutzung, Veränderung und Weitergabe der Software, auch kommerziell und in Forks. Der Copyright-Vermerk und der Erlaubnisvermerk aus `LICENSE` müssen in allen Kopien oder wesentlichen Teilen der Software enthalten bleiben. Eine kurze Namensnennung allein ersetzt diese Hinweise nicht. Maßgeblich ist der vollständige Lizenztext einschließlich des Gewährleistungs- und Haftungsausschlusses.
+
+**Generierte Bilder und Entwürfe (freiwillige Namensnennung):** Aus der MIT-Lizenz der Software folgt keine allgemeine Pflicht, bei der Nutzung oder Veröffentlichung damit erzeugter Bilder und Entwürfe den Entwickler zu nennen – auch nicht bei kommerziellen oder offiziellen Veröffentlichungen. Wir freuen uns über eine freiwillige Angabe, zum Beispiel: *„Erstellt mit dem Fachwerk-Generator von Maximilian Georg Liebscher / FassadenSchmied – fachwerkgenerator.de“*. Auch die oben genannten Hashtags und Markierungen sind freiwillig.
+
+Diese Klarstellung vergibt keine zusätzliche Lizenz für Ergebnisse und trifft keine Aussage über etwaige Rechte an verwendeten oder übernommenen fremden Inhalten.
+
+Mögliche künftige Regelungen für eine verpflichtende Namensnennung bei Ergebnissen sind als [offene Entscheidung dokumentiert](docs/licensing-attribution.md); sie werden hiermit nicht eingeführt.
